@@ -1,2 +1,44 @@
 compress: proc options(main);
+
+declare cu_$arg_ptr
+     entry(fixed binary, pointer, fixed binary(21), fixed binary(35));
+declare com_err_ entry options(variable);
+
+declare sysprint file;
+declare argument_pointer pointer;
+declare argument_length fixed binary(21);
+declare argument character(argument_length) based(argument_pointer);
+declare error_code fixed binary(35);
+declare title_length fixed binary(21);
+declare title character(title_length) controlled;
+
+call cu_$arg_ptr(1, argument_pointer, argument_length, error_code);
+if error_code ^= 0 then do;
+   call com_err_(error_code, "compress",
+		 "either -pathname or -output_switch required");
+   return;
+end;
+if argument = "-pathname" | argument = "-pn" then do;
+   call cu_$arg_ptr(2, argument_pointer, argument_length, error_code);
+   if error_code ^= 0 then do;
+      call com_err_(error_code, "compress", "-pathname requires an argument");
+      return;
+   end;
+   title_length = length("vfile_ " || argument);
+   allocate title;
+   title = "vfile_ " || argument;
+end;
+else if argument = "-output_switch" | argument = "-osw" then do;
+   call cu_$arg_ptr(2, argument_pointer, argument_length, error_code);
+   if error_code ^= 0 then do;
+      call com_err_(error_code, "compress",
+		    "-output_switch requires an argument");
+   end;
+   title_length = argument_length;
+   allocate title;
+   title = argument;
+end;
+put list (title);
+free title;
+
 end compress;
