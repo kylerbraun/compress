@@ -1,0 +1,2 @@
+compress: proc options(main);
+end compress;
