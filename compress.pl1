@@ -3,6 +3,7 @@ compress: proc options(main);
 declare cu_$arg_ptr
      entry(fixed binary, pointer, fixed binary(21), fixed binary(35));
 declare com_err_ entry options(variable);
+declare error_table_$badopt external;
 
 declare sysprint file;
 declare argument_pointer pointer;
@@ -14,8 +15,9 @@ declare title character(title_length) controlled;
 
 call cu_$arg_ptr(1, argument_pointer, argument_length, error_code);
 if error_code ^= 0 then do;
+required:
    call com_err_(error_code, "compress",
-		 "either -pathname or -output_switch required");
+		 "Either -pathname or -output_switch required.");
    return;
 end;
 if argument = "-pathname" | argument = "-pn" then do;
@@ -37,6 +39,10 @@ else if argument = "-output_switch" | argument = "-osw" then do;
    title_length = argument_length;
    allocate title;
    title = argument;
+end;
+else do;
+   error_code = error_table_$badopt;
+   goto required;
 end;
 put list (title);
 free title;
