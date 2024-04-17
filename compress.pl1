@@ -9,42 +9,72 @@ declare sysprint file;
 declare argument_pointer pointer;
 declare argument_length fixed binary(21);
 declare argument character(argument_length) based(argument_pointer);
+declare index fixed binary;
+declare input_pointer pointer;
+declare input_length fixed binary(21) initial(0);
+declare input character(input_length) based(input_pointer);
 declare error_code fixed binary(35);
-declare title_length fixed binary(21);
+declare title_length fixed binary(21) initial(0);
 declare title character(title_length) controlled;
 
-call cu_$arg_ptr(1, argument_pointer, argument_length, error_code);
-if error_code ^= 0 then do;
-required:
-   call com_err_(error_code, "compress",
-		 "Either -pathname or -output_switch required.");
-   return;
-end;
-if argument = "-pathname" | argument = "-pn" then do;
-   call cu_$arg_ptr(2, argument_pointer, argument_length, error_code);
+do index = 1 repeat index + 2 while("1"b);
+   call cu_$arg_ptr(index, argument_pointer, argument_length, error_code);
    if error_code ^= 0 then do;
-      call com_err_(error_code, "compress", "-pathname requires an argument");
+      goto end_arg_parse;
+   end;
+   if argument = "-pathname" | argument = "-pn" then do;
+      call cu_$arg_ptr(index + 1, argument_pointer, argument_length,
+		       error_code);
+      if error_code ^= 0 then do;
+	 call com_err_(error_code, "compress",
+		       "-pathname requires an argument.");
+	 return;
+      end;
+      input_length = argument_length;
+      input_pointer = argument_pointer;
+   end;
+   else if argument = "-output_file" | argument = "-of" then do;
+      call cu_$arg_ptr(index + 1, argument_pointer, argument_length,
+		       error_code);
+      if error_code ^= 0 then do;
+	 call com_err_(error_code, "compress",
+		       "-output_file requires an argument.");
+	 return;
+      end;
+      title_length = length("vfile_ " || argument);
+      allocate title;
+      title = "vfile_ " || argument;
+   end;
+   else if argument = "-output_switch" | argument = "-osw" then do;
+      call cu_$arg_ptr(index + 1, argument_pointer, argument_length,
+      	   	       error_code);
+      if error_code ^= 0 then do;
+	 call com_err_(error_code, "compress",
+		       "-output_switch requires an argument.");
+	 return;
+      end;
+      title_length = argument_length;
+      allocate title;
+      title = argument;
+   end;
+   else do;
+      error_code = error_table_$badopt;
+      call com_err_(error_code, "compress", "Bad option: " || argument || ".");
       return;
    end;
-   title_length = length("vfile_ " || argument);
+end;
+end_arg_parse:
+if input_length = 0 then do;
+   call com_err_(error_code, "compress", "-pathname required.");
+   return;
+end;
+if title_length = 0 then do;
+   title_length = length("vfile_ " || input || ".fz");
    allocate title;
-   title = "vfile_ " || argument;
+   title = "vfile_ " || input || ".fz";
 end;
-else if argument = "-output_switch" | argument = "-osw" then do;
-   call cu_$arg_ptr(2, argument_pointer, argument_length, error_code);
-   if error_code ^= 0 then do;
-      call com_err_(error_code, "compress",
-		    "-output_switch requires an argument");
-   end;
-   title_length = argument_length;
-   allocate title;
-   title = argument;
-end;
-else do;
-   error_code = error_table_$badopt;
-   goto required;
-end;
-put list (title);
+
+put list (input, title);
 free title;
 
 end compress;
