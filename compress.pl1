@@ -1,9 +1,16 @@
-compress: proc options(main);
+compress: procedure options(main);
 
 declare cu_$arg_ptr
      entry(fixed binary, pointer, fixed binary(21), fixed binary(35));
 declare com_err_ entry options(variable);
 declare error_table_$badopt external;
+declare expand_pathname_
+     entry(character(*), character(*), character(*), fixed binary(35));
+declare hcs_$initiate_count
+     entry(character(*), character(*), character(*), fixed binary(24),
+	   fixed binary(2), pointer, fixed binary(35));
+declare hcs_$terminate_noname
+     entry(pointer, fixed binary(35));
 
 declare sysprint file;
 declare argument_pointer pointer;
@@ -16,6 +23,11 @@ declare input character(input_length) based(input_pointer);
 declare error_code fixed binary(35);
 declare title_length fixed binary(21) initial(0);
 declare title character(title_length) controlled;
+declare dirname character(168);
+declare entryname character(32);
+declare input_segment_pointer pointer;
+declare input_segment_bitcount fixed binary(24);
+declare null builtin;
 
 do index = 1 repeat index + 2 while("1"b);
    call cu_$arg_ptr(index, argument_pointer, argument_length, error_code);
@@ -73,8 +85,28 @@ if title_length = 0 then do;
    allocate title;
    title = "vfile_ " || input || ".fz";
 end;
+call expand_pathname_(input, dirname, entryname, error_code);
+if error_code ^= 0 then do;
+   call com_err_(error_code, "compress", "Could not expand input pathname.");
+   goto cleanup_title;
+end;
+call hcs_$initiate_count(dirname, entryname, "", input_segment_bitcount, 0,
+			 input_segment_pointer, error_code);
+if input_segment_pointer = null then do;
+   call com_err_(error_code, "compress", "Could not initiate input segment ^a.",
+		 input);
+   goto cleanup_title;
+end;
 
-put list (input, title);
+put skip list (input, title);
+
+cleanup_seg:
+call hcs_$terminate_noname(input_segment_pointer, error_code);
+if error_code ^= 0 then do;
+   call com_err_(error_code, "compress",
+		 "Could not terminate input segment ^a.", input);
+end;
+cleanup_title:
 free title;
 
 end compress;
