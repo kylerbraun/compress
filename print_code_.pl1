@@ -1,0 +1,21 @@
+print_code_: procedure(full, order, codes);
+
+declare ioa_ entry options(variable);
+
+declare codes(0:511) bit(20) varying;
+declare full bit(1);
+declare i fixed binary(9);
+declare order(0:511) fixed binary(9);
+
+if full
+   then do i = lbound(order, 1) to hbound(order, 1);
+      call ioa_("^d: ^[^b^;^s^]", order(i), length(codes(order(i))) > 0,
+		codes(order(i)));
+   end;
+else
+   do i = lbound(order, 1) to hbound(order, 1)
+	  while(length(codes(order(i))) > 0);
+      call ioa_("^d: ^b", order(i), codes(order(i)));
+   end;
+
+end print_code_;

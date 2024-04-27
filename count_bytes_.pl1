@@ -1,0 +1,14 @@
+count_bytes_: procedure(bytes) returns (dimension(0:511) fixed binary(35));
+
+declare bytes(*) bit(9);
+declare result(0:511) fixed binary(35) initial((512) 0);
+declare i fixed binary(20);
+declare byte_value fixed binary(9);
+
+do i = lbound(bytes, 1) to hbound(bytes, 1);
+   byte_value = convert(byte_value, bytes(i));
+   result(byte_value) = result(byte_value) + 1;
+end;
+
+return(result);
+end count_bytes_;

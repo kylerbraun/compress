@@ -1,8 +1,8 @@
 call_print_counts: procedure;
 
-declare print_counts_ entry(dimension(0:511) fixed binary(20));
+declare print_counts_ entry(dimension(0:511) fixed binary(35));
 
-declare counts(0:511) fixed binary(20) initial((512) 0);
+declare counts(0:511) fixed binary(35) initial((512) 0);
 declare i fixed binary(9);
 
 do i = 1 to 5;

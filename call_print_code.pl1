@@ -1,0 +1,30 @@
+call_print_code: procedure(full);
+
+declare print_code_ entry(bit(1),
+			  dimension(0:511) fixed binary(9),
+			  dimension(0:511) bit(20) varying);
+
+declare codes(0:511) bit(20) varying initial((512) (""b));
+declare full bit(1);
+declare i fixed binary(9);
+declare order(0:511) fixed binary(9);
+
+do i = 0 to 4;
+   order(i) = 20 - i;
+end;
+
+do i = 5 to hbound(order, 1);
+   if i < 21
+      then order(i) = i - 5;
+   else order(i) = i;
+end;
+
+codes(20) = "0"b;
+codes(19) = "10"b;
+codes(18) = "110"b;
+codes(17) = "1110"b;
+codes(16) = "1111"b;
+
+call print_code_(full, order, codes);
+
+end call_print_code;
