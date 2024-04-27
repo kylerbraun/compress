@@ -7,17 +7,17 @@ declare sort_items_$fixed_bin entry(pointer);
 
 declare bytes(*) bit(9);
 declare codes(0:511) bit(20) varying;
-declare code_value fixed binary(20);
+declare code_value fixed binary(21);
 declare count fixed binary(35) based(counts_sorted.vector(i));
 declare counts(0:511) fixed binary(35);
-declare next_count fixed binary(35) based(counts_sorted.vector(i + 1));
 declare 01 counts_sorted aligned,
 	   02 length fixed binary(18) initial(512),
 	   02 vector(0:511) pointer unaligned;
-declare i fixed binary(9);
+declare i fixed binary(10);
 declare j fixed binary(5);
 declare order(0:511) fixed binary(9);
-declare next_code bit(20) varying initial("0"b);
+declare next_code bit(21) varying initial("0"b);
+declare num_used_byte_values fixed binary(10) initial(0);
 declare offset fixed binary(18);
 declare total fixed binary(35) initial(0);
 
@@ -38,29 +38,37 @@ do i = lbound(counts, 1) to hbound(counts, 1);
    total = total + counts(i);
 end;
 
-do i = hbound(counts_sorted.vector, 1) to lbound(counts_sorted.vector, 1) by -1;
-   if count = 0
-      then goto fill_unused_codes;
-   do j = length(next_code) repeat j + 1 while("1"b);
-      if count*2**j >= total then do;
-	 if j > length(next_code) then do;
-	    /* if |count/total - 1/2**j| > |count/total - 1/2**(j - 1)| */
-	    /* Since we don't want unnecessary divisions, we convert the above
-	       expression into units of 1/(total*2**j) before comparing. */
-	    if count*2**j - total > total*2 - count*2**j
-	       then j = j - 1;
-	 end;
-	 goto allocate_code;
-      end;
+do i = hbound(counts_sorted.vector, 1) to lbound(counts_sorted.vector, 1) by -1
+       while(count > 0);
+   num_used_byte_values = num_used_byte_values + 1;
+end;
+
+do i = hbound(counts_sorted.vector, 1)
+	  by -1
+	  while(allocations_left(i) > 0);
+   /* The value of next_code will be extended with j zero bits before being used
+      for the next allocation.  Find the value of j that minimizes
+        |1/num_codes(j) - count/total|,
+      where
+        num_codes(j) = (2**length(next_code) - next_code)*2**j,
+      i.e. the number of codes left once the code is extended by j bits. */
+   do j = 0 by 1 while(count*num_codes(j) < total);
    end;
-allocate_code:
-   /* If there are more bytes to encode, make sure we leave some codes avaiable
+   if j > length(next_code) then do;
+      /* if |count/total - 1/num_codes(j)|
+	      > |count/total - 1/num_codes(j - 1)| */
+      /* Since we don't want unnecessary divisions, we convert the above
+      expression into units of 1/(total*num_codes(j)) before comparing. */
+      if 3*total > 2*count*num_codes(j) | num_codes(j) > allocations_left(i)
+	 then j = j - 1;
+   end;
+   /* If there are more bytes to encode, make sure we leave some codes available
       for them. */
-   if j = length(next_code) & i < hbound(counts_sorted.vector, 1)
-	& next_count > 0 & next_code = copy("1"b, j)
+   if j = 0 & allocations_left(i) > 1
+	& next_code = copy("1"b, length(next_code))
       then j = j + 1;
 
-   next_code = next_code || copy("0"b, j - length(next_code));
+   next_code = next_code || copy("0"b, j);
    codes(order(511 - i)) = next_code;
 
    /* Increment the bit-string in next_code by 1 without increasing its length.
@@ -69,12 +77,25 @@ allocate_code:
    code_value = convert(code_value, next_code);
    code_value = code_value + 1;
    next_code = substr(convert(next_code, code_value),
-		      20 - length(next_code) + 1);
+		      21 - length(next_code) + 1);
+
+   total = total - count;
 end;
 
-fill_unused_codes:
 do i = i to lbound(counts_sorted.vector, 1) by -1;
    codes(order(511 - i)) = ""b;
+end;
+
+allocations_left: procedure(n) returns(fixed binary(10));
+   declare n fixed binary(10);
+   return(num_used_byte_values + n - hbound(counts_sorted.vector, 1));
+end;
+
+num_codes: procedure(n) returns(fixed binary(20));
+   declare code_value fixed binary(21);
+   declare n fixed binary(5);
+   code_value = convert(code_value, next_code);
+   return((2**length(next_code) - code_value)*2**n);
 end;
 
 end make_code_;
