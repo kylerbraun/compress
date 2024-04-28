@@ -1,4 +1,4 @@
-call_print_counts: procedure;
+call_print_counts_: procedure;
 
 declare print_counts_ entry(dimension(0:511) fixed binary(35));
 
@@ -11,4 +11,4 @@ end;
 
 call print_counts_(counts);
 
-end call_print_counts;
+end call_print_counts_;

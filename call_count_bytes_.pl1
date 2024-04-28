@@ -1,4 +1,4 @@
-call_count_bytes: procedure;
+call_count_bytes_: procedure;
 
 declare c12345$(15) bit(9) external static;
 
@@ -8,4 +8,4 @@ declare print_counts_ entry(dimension(0:511) fixed binary(35));
 
 call print_counts_(count_bytes_(c12345$));
 
-end call_count_bytes;
+end call_count_bytes_;
