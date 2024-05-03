@@ -1,0 +1,42 @@
+write_header_: procedure(bits, order, codes, padding_size)
+    returns(fixed binary(24));
+
+declare bits bit(*);
+declare codes(0:511) bit(20) varying;
+declare datum fixed binary(35);
+declare i fixed binary(10);
+declare order(0:511) fixed binary(9);
+declare padding_size fixed binary(4);
+declare used fixed binary(24) initial(0);
+
+do i = lbound(order, 1) to hbound(order, 1) while(length(codes(order(i))) > 0);
+   datum = i;
+   call append_fixed(datum, 9);
+end;
+
+do i = lbound(order, 1) to hbound(order, 1) while(length(codes(order(i))) > 0);
+   datum = length(codes(order(i)));
+   call append_fixed(datum, 4);
+   call append(codes(order(i)));
+end;
+
+datum = padding_size;
+call append_fixed(datum, 4);
+
+return(used);
+
+append: procedure(datum);
+   declare datum bit(*) varying;
+   substr(bits, used + 1, length(datum)) = datum;
+   used = used + length(datum);
+end;
+
+append_fixed: procedure(datum, length);
+   declare datum fixed binary(35);
+   declare length fixed binary(6);
+   declare to_append bit(35);
+   to_append = convert(to_append, datum);
+   call append(substr(to_append, 1, length));
+end;
+
+end write_header_;
