@@ -2,10 +2,11 @@ print_code_: procedure(full, order, codes);
 
 declare ioa_ entry options(variable);
 
-declare codes(0:511) bit(20) varying;
 declare full bit(1);
-declare i fixed binary(9);
 declare order(0:511) fixed binary(9);
+declare codes(0:511) bit(20) varying;
+
+declare i fixed binary(10);
 
 if full
    then do i = lbound(order, 1) to hbound(order, 1);

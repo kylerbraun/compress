@@ -3,7 +3,8 @@ print_counts_: procedure(counts);
 declare ioa_ entry options(variable);
 
 declare counts(0:511) fixed binary(35);
-declare i fixed binary(9);
+
+declare i fixed binary(10);
 
 do i = lbound(counts, 1) to hbound(counts, 1);
    call ioa_("^d: ^d", i, counts(i));

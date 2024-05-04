@@ -4,8 +4,9 @@ declare print_code_ entry(bit(1),
 			  dimension(0:511) fixed binary(9),
 			  dimension(0:511) bit(20) varying);
 
-declare codes(0:511) bit(20) varying initial((512) (""b));
 declare full bit(1);
+
+declare codes(0:511) bit(20) varying initial((512) (""b));
 declare i fixed binary(10);
 declare order(0:511) fixed binary(9);
 

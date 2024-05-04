@@ -2,12 +2,13 @@ read_header_: procedure(bits, order, codes, padding_size)
   returns(fixed binary(24));
 
 declare bits bit(*);
-declare code_count fixed binary(10);
-declare code_length fixed binary(35);
-declare codes(0:511) bit(20) varying;
-declare i fixed binary(10);
 declare order(0:511) fixed binary(9);
-declare padding_size fixed binary(4);
+declare codes(0:511) bit(20) varying;
+declare padding_size fixed binary;
+
+declare code_count fixed binary(10);
+declare code_length fixed binary;
+declare i fixed binary(10);
 declare used fixed binary(24) initial(0);
 
 order(0) = read_fixed(9);
@@ -38,14 +39,13 @@ padding_size = read_fixed(4);
 return(used);
 
 read: procedure(length) returns(bit(*));
-   declare length fixed binary(35);
-   declare result bit(36) varying;
+   declare length fixed binary;
    used = used + length;
    return(substr(bits, used - length + 1, length));
 end;
 
 read_fixed: procedure(length) returns(fixed binary(35));
-   declare length fixed binary(35);
+   declare length fixed binary;
    declare result fixed binary(35);
    result = convert(result, read(length));
    return(result);
