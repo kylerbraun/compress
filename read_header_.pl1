@@ -1,0 +1,54 @@
+read_header_: procedure(bits, order, codes, padding_size)
+  returns(fixed binary(24));
+
+declare bits bit(*);
+declare code_count fixed binary(10);
+declare code_length fixed binary(35);
+declare codes(0:511) bit(20) varying;
+declare i fixed binary(10);
+declare order(0:511) fixed binary(9);
+declare padding_size fixed binary(4);
+declare used fixed binary(24) initial(0);
+
+order(0) = read_fixed(9);
+
+do i = 1 to hbound(order, 1);
+   order(i) = read_fixed(9);
+   /* Recognize empty list, which is indicated by a repeated second element.
+      If the list is in fact empty, set i to make it seem like we didn't read
+      any elements.  As a useful side-effect, this will cause the next statement
+      to recognize that the list terminator has been found. */
+   if i > 1 & order(i) = order(1)
+      then i = 0;
+   /* Recognize terminator, which is indicated by a repeated first element. */
+   if order(i) = order(0)
+      then goto set_count;
+end;
+
+set_count:
+code_count = i;
+
+do i = 0 to code_count - 1;
+   code_length = read_fixed(4);
+   codes(i) = read(code_length);
+end;
+
+padding_size = read_fixed(4);
+
+return(used);
+
+read: procedure(length) returns(bit(*));
+   declare length fixed binary(35);
+   declare result bit(36) varying;
+   used = used + length;
+   return(substr(bits, used - length + 1, length));
+end;
+
+read_fixed: procedure(length) returns(fixed binary(35));
+   declare length fixed binary(35);
+   declare result fixed binary(35);
+   result = convert(result, read(length));
+   return(result);
+end;
+
+end read_header_;

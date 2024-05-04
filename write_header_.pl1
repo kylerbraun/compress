@@ -10,7 +10,22 @@ declare padding_size fixed binary(4);
 declare used fixed binary(24) initial(0);
 
 do i = lbound(order, 1) to hbound(order, 1) while(length(codes(order(i))) > 0);
-   datum = i;
+   datum = order(i);
+   call append_fixed(datum, 9);
+end;
+
+/* Terminate list with repeated first element, or 0-1-1 if there are no
+   elements.  These terminators are recognizable because they contain repeated
+   elements, which cannot occur in the payload itself. */
+if i = 0 then do;
+   datum = 0;
+   call append_fixed(datum, 9);
+   datum = 1;
+   call append_fixed(datum, 9);
+   call append_fixed(datum, 9);
+end;
+else do;
+   datum = order(0);
    call append_fixed(datum, 9);
 end;
 
