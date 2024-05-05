@@ -8,7 +8,9 @@ declare padding_size fixed binary;
 
 declare code_count fixed binary(10);
 declare code_length fixed binary;
+declare code_value fixed binary(21);
 declare i fixed binary(10);
+declare next_code bit(21) varying initial("0"b);
 declare used fixed binary(24) initial(0);
 
 order(0) = read_fixed(9);
@@ -31,7 +33,12 @@ code_count = i;
 
 do i = 0 to code_count - 1;
    code_length = read_fixed(4);
-   codes(i) = read(code_length);
+   next_code = next_code || copy("0"b, code_length - length(next_code));
+   codes(order(i)) = next_code;
+   code_value = convert(code_value, next_code);
+   code_value = code_value + 1;
+   next_code = substr(convert(next_code, code_value),
+		      21 - length(next_code) + 1);
 end;
 
 padding_size = read_fixed(4);

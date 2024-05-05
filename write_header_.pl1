@@ -23,14 +23,13 @@ if i = 0 then do;
    call append_fixed(1, 9);
    call append_fixed(1, 9);
 end;
-else do;
+else if i <= hbound(order, 1) then do;
    datum = order(0);
    call append_fixed(datum, 9);
 end;
 
 do i = lbound(order, 1) to hbound(order, 1) while(length(codes(order(i))) > 0);
    call append_fixed(length(codes(order(i))), 4);
-   call append(codes(order(i)));
 end;
 
 datum = padding_size;
