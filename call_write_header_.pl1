@@ -1,0 +1,36 @@
+call_write_header_: procedure;
+
+declare com_err_ entry options(variable);
+declare hcs_$set_bc_seg entry(pointer, fixed binary(24), fixed binary(35));
+declare hcs_$truncate_seg entry(pointer, fixed binary(19), fixed binary(35));
+declare make_example_code_ entry(dimension(0:511) fixed binary(9),
+				 dimension(0:511) bit(20) varying);
+declare write_header_ entry(bit(*), dimension(0:511) fixed binary(9),
+			    dimension(0:511) bit(20) varying, fixed binary)
+			returns(fixed binary(24));
+
+declare example_header$ bit(512*9 + 512*4 + 4) external static;
+
+declare bit_count fixed binary(24);
+declare codes(0:511) bit(20) varying;
+declare order(0:511) fixed binary(9);
+declare status_code fixed binary(35);
+
+call hcs_$truncate_seg(addr(example_header$), 0, status_code);
+if status_code ^= 0 then do;
+   call com_err_(status_code, "call_write_header_",
+		 "could not truncate example_header");
+   return;
+end;
+
+call make_example_code_(order, codes);
+bit_count = write_header_(example_header$, order, codes, 9);
+
+call hcs_$set_bc_seg(addr(example_header$), bit_count, status_code);
+if status_code ^= 0 then do;
+   call com_err_(status_code, "call_write_header_",
+		 "could not set bit count for example_header");
+   return;
+end;
+
+end call_write_header_;

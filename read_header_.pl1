@@ -13,6 +13,7 @@ declare i fixed binary(10);
 declare next_code bit(21) varying initial("0"b);
 declare used fixed binary(24) initial(0);
 
+codes = ""b;
 order(0) = read_fixed(9);
 
 do i = 1 to hbound(order, 1);
@@ -32,13 +33,20 @@ set_count:
 code_count = i;
 
 do i = 0 to code_count - 1;
-   code_length = read_fixed(4);
+   code_length = read_fixed(5);
    next_code = next_code || copy("0"b, code_length - length(next_code));
    codes(order(i)) = next_code;
    code_value = convert(code_value, next_code);
    code_value = code_value + 1;
    next_code = substr(convert(next_code, code_value),
 		      21 - length(next_code) + 1);
+end;
+
+do i = lbound(codes, 1) to hbound(codes, 1);
+   if length(codes(i)) = 0 then do;
+      order(code_count) = i;
+      code_count = code_count + 1;
+   end;
 end;
 
 padding_size = read_fixed(4);
