@@ -4,7 +4,7 @@ read_header_: procedure(bits, order, codes, padding_size)
 declare bits bit(*);
 declare order(0:511) fixed binary(9);
 declare codes(0:511) bit(20) varying;
-declare padding_size fixed binary;
+declare padding_size fixed binary(4);
 
 declare code_count fixed binary(10);
 declare code_length fixed binary;

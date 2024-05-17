@@ -6,7 +6,7 @@ declare hcs_$truncate_seg entry(pointer, fixed binary(19), fixed binary(35));
 declare make_example_code_ entry(dimension(0:511) fixed binary(9),
 				 dimension(0:511) bit(20) varying);
 declare write_header_ entry(bit(*), dimension(0:511) fixed binary(9),
-			    dimension(0:511) bit(20) varying, fixed binary)
+			    dimension(0:511) bit(20) varying, fixed binary(4))
 			returns(fixed binary(24));
 
 declare example_header$ bit(512*9 + 512*4 + 4) external static;

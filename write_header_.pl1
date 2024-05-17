@@ -4,15 +4,13 @@ write_header_: procedure(bits, order, codes, padding_size)
 declare bits bit(*);
 declare order(0:511) fixed binary(9);
 declare codes(0:511) bit(20) varying;
-declare padding_size fixed binary;
+declare padding_size fixed binary(4);
 
-declare datum fixed binary(35);
 declare i fixed binary(10);
 declare used fixed binary(24) initial(0);
 
 do i = lbound(order, 1) to hbound(order, 1) while(length(codes(order(i))) > 0);
-   datum = order(i);
-   call append_fixed(datum, 9);
+   call append_fixed((order(i)), 9);
 end;
 
 /* Terminate list with repeated first element, or 0-1-1 if there are no
@@ -23,17 +21,14 @@ if i = 0 then do;
    call append_fixed(1, 9);
    call append_fixed(1, 9);
 end;
-else if i <= hbound(order, 1) then do;
-   datum = order(0);
-   call append_fixed(datum, 9);
-end;
+else if i <= hbound(order, 1)
+   then call append_fixed((order(0)), 9);
 
 do i = lbound(order, 1) to hbound(order, 1) while(length(codes(order(i))) > 0);
    call append_fixed(length(codes(order(i))), 5);
 end;
 
-datum = padding_size;
-call append_fixed(datum, 4);
+call append_fixed((padding_size), 4);
 
 return(used);
 
