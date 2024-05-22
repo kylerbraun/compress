@@ -1,0 +1,17 @@
+encode_: procedure(bytes, destination, codes, used);
+
+declare bytes(*) bit(9);
+declare destination bit(*);
+declare codes(0:511) bit(20) varying;
+declare used fixed binary(24);
+
+declare byte fixed binary(9);
+declare i fixed binary(20);
+
+do i = lbound(bytes, 1) to hbound(bytes, 1);
+   byte = convert(byte, bytes(i));
+   substr(destination, used + 1, length(codes(byte))) = codes(byte);
+   used = used + length(codes(byte));
+end;
+
+end encode_;
