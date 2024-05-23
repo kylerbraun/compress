@@ -1,112 +1,146 @@
 compress: procedure options(main);
 
+declare com_err_ entry options(variable);
 declare cu_$arg_ptr
      entry(fixed binary, pointer, fixed binary(21), fixed binary(35));
-declare com_err_ entry options(variable);
-declare error_table_$badopt external;
+declare cu_$get_command_name entry(pointer, fixed binary(21), fixed binary(35));
+declare (error_table_$badopt,
+	 error_table_$noarg) fixed binary(35) external;
 declare expand_pathname_
      entry(character(*), character(*), character(*), fixed binary(35));
+declare expand_pathname_$add_suffix
+     entry(character(*), character(*), character(*), character(*),
+	   fixed binary(35));
 declare hcs_$initiate_count
      entry(character(*), character(*), character(*), fixed binary(24),
 	   fixed binary(2), pointer, fixed binary(35));
 declare hcs_$terminate_noname
      entry(pointer, fixed binary(35));
+declare ioa_ entry options(variable);
+declare suffixed_name_$new_suffix
+     entry(character(*), character(*), character(*), character(32),
+	   fixed binary(35));
 
-declare sysprint file;
-declare argument_pointer pointer;
-declare argument_length fixed binary(21);
 declare argument character(argument_length) based(argument_pointer);
-declare index fixed binary;
-declare input_pointer pointer;
-declare input_length fixed binary(21) initial(0);
-declare input character(input_length) based(input_pointer);
+declare argument_length fixed binary(21);
+declare argument_pointer pointer;
+declare brief bit initial("0"b);
+declare cleanup label initial(finished);
+declare command_name character(command_name_length) based(command_name_pointer);
+declare command_name_length fixed binary(21);
+declare command_name_pointer pointer;
+declare compressed_entryname character(32);
+declare decompress bit initial("0"b);
 declare error_code fixed binary(35);
-declare title_length fixed binary(21) initial(0);
-declare title character(title_length) controlled;
-declare dirname character(168);
-declare entryname character(32);
-declare input_segment_pointer pointer;
+declare index fixed binary;
+declare input_dir_name character(168);
 declare input_segment_bitcount fixed binary(24);
+declare input_segment_pointer pointer initial(null);
 declare null builtin;
+declare output_entryname character(32);
+declare output_segment_pointer pointer initial(null);
+declare pathname character(pathname_length) based(pathname_pointer);
+declare pathname_length fixed binary(21);
+declare pathname_pointer pointer initial(null);
+declare replace bit initial("0"b);
+declare uncompressed_entryname character(32);
+declare unknown character(9) static initial("(unknown)");
 
-do index = 1 repeat index + 2 while("1"b);
+call cu_$get_command_name(command_name_pointer, command_name_length,
+			  error_code);
+if error_code ^= 0 then do;
+   command_name_pointer = addr(unknown);
+   command_name_length = length(unknown);
+end;
+
+do index = 1 by 1;
    call cu_$arg_ptr(index, argument_pointer, argument_length, error_code);
    if error_code ^= 0 then do;
       goto end_arg_parse;
    end;
-   if argument = "-pathname" | argument = "-pn" then do;
-      call cu_$arg_ptr(index + 1, argument_pointer, argument_length,
-		       error_code);
-      if error_code ^= 0 then do;
-	 call com_err_(error_code, "compress",
-		       "-pathname requires an argument.");
-	 return;
-      end;
-      input_length = argument_length;
-      input_pointer = argument_pointer;
-   end;
-   else if argument = "-output_file" | argument = "-of" then do;
-      call cu_$arg_ptr(index + 1, argument_pointer, argument_length,
-		       error_code);
-      if error_code ^= 0 then do;
-	 call com_err_(error_code, "compress",
-		       "-output_file requires an argument.");
-	 return;
-      end;
-      title_length = length("vfile_ " || argument);
-      allocate title;
-      title = "vfile_ " || argument;
-   end;
-   else if argument = "-output_switch" | argument = "-osw" then do;
-      call cu_$arg_ptr(index + 1, argument_pointer, argument_length,
-      	   	       error_code);
-      if error_code ^= 0 then do;
-	 call com_err_(error_code, "compress",
-		       "-output_switch requires an argument.");
-	 return;
-      end;
-      title_length = argument_length;
-      allocate title;
-      title = argument;
-   end;
+   if argument = "-brief"
+      then brief = "1"b;
+   else if argument = "-replace"
+      then replace = "1"b;
+   else if substr(argument, 1, 1) = "-"
+      then call fail(error_table_$badopt, argument);
    else do;
-      error_code = error_table_$badopt;
-      call com_err_(error_code, "compress", "Bad option: " || argument || ".");
-      return;
+      if pathname_pointer = null then do;
+	 pathname_length = argument_length;
+	 pathname_pointer = argument_pointer;
+      end;
+      else call usage_error(0);
    end;
 end;
 end_arg_parse:
-if input_length = 0 then do;
-   call com_err_(error_code, "compress", "-pathname required.");
-   return;
-end;
-if title_length = 0 then do;
-   title_length = length("vfile_ " || input || ".fz");
-   allocate title;
-   title = "vfile_ " || input || ".fz";
-end;
-call expand_pathname_(input, dirname, entryname, error_code);
-if error_code ^= 0 then do;
-   call com_err_(error_code, "compress", "Could not expand input pathname.");
-   goto cleanup_title;
-end;
-call hcs_$initiate_count(dirname, entryname, "", input_segment_bitcount, 0,
-			 input_segment_pointer, error_code);
+
+if pathname_pointer = null
+   then call usage_error(error_table_$noarg);
+
+call expand_pathname_$add_suffix(pathname, "fz", input_dir_name,
+				 compressed_entryname, error_code);
+call maybe_fail(error_code, "Could not expand input pathname.");
+call suffixed_name_$new_suffix(compressed_entryname, "fz", "",
+			       uncompressed_entryname, 0);
+
+call hcs_$initiate_count
+       (input_dir_name, input_entryname(), "", input_segment_bitcount, 0,
+	input_segment_pointer, error_code);
 if input_segment_pointer = null then do;
-   call com_err_(error_code, "compress", "Could not initiate input segment ^a.",
-		 input);
-   goto cleanup_title;
-end;
-
-put skip list (input, title);
-
-cleanup_seg:
-call hcs_$terminate_noname(input_segment_pointer, error_code);
-if error_code ^= 0 then do;
    call com_err_(error_code, "compress",
-		 "Could not terminate input segment ^a.", input);
+		 "Could not initiate input segment ^a>^a.", input_dir_name,
+		 input_entryname());
+   goto finished;
 end;
-cleanup_title:
-free title;
+
+/*
+call hcs_$make_seg("", output_entryname, "", 01010b, output_segment_pointer,
+		   error_code);
+*/
+
+call ioa_("^a, ^a, ^a, ^b, ^b, ^b", input_dir_name, compressed_entryname,
+	  uncompressed_entryname, decompress, brief, replace);
+
+input_entryname: procedure returns(character(*));
+   if decompress
+      then return(compressed_entryname);
+      else return(uncompressed_entryname);
+end;
+
+fail: procedure(error_code, message);
+   declare error_code fixed binary(35);
+   declare message character(*);
+
+   call com_err_(error_code, command_name, message);
+   goto finished;
+end;
+
+maybe_fail: procedure(error_code, message);
+   declare error_code fixed binary(35);
+   declare message character(*);
+
+   if error_code ^= 0
+      then call fail(error_code, message);
+end;
+
+usage_error: procedure(error_code);
+   declare error_code fixed binary(35);
+
+   declare cu_error_code fixed binary(35);
+
+   call com_err_(error_code, command_name, "Usage: ^a {-control_args}",
+		 command_name);
+   goto finished;
+end;
+
+finished:
+if input_segment_pointer ^= null then do;
+   call hcs_$terminate_noname(input_segment_pointer, error_code);
+   if error_code ^= 0 then do;
+      call com_err_(error_code, "compress",
+		    "Could not terminate input segment ^a>^a.", input_dir_name,
+		    input_entryname);
+   end;
+end;
 
 end compress;
