@@ -1,11 +1,18 @@
 compress: procedure options(main);
 
 declare com_err_ entry options(variable);
+declare command_query_$yes_no entry options(variable);
+declare compress_ entry(dimension(*) bit(9), bit(*), fixed binary(24))
+		    returns(fixed binary(24));
 declare cu_$arg_ptr
      entry(fixed binary, pointer, fixed binary(21), fixed binary(35));
 declare cu_$get_command_name entry(pointer, fixed binary(21), fixed binary(35));
 declare (error_table_$badopt,
-	 error_table_$noarg) fixed binary(35) external;
+	 error_table_$namedup,
+	 error_table_$noarg,
+	 error_table_$segknown) fixed binary(35) external;
+declare decompress_ entry(bit(*), dimension(*) bit(9), fixed binary(24))
+		      returns(fixed bin(24));
 declare expand_pathname_
      entry(character(*), character(*), character(*), fixed binary(35));
 declare expand_pathname_$add_suffix
@@ -17,35 +24,48 @@ declare hcs_$initiate_count
 	   fixed binary(2), pointer, fixed binary(35));
 declare hcs_$make_seg entry(character(*), character(*), character(*),
 			    fixed binary(5), pointer, fixed binary(35));
-declare hcs_$terminate_noname
-     entry(pointer, fixed binary(35));
+declare hcs_$terminate_noname entry(pointer, fixed binary(35));
+declare hcs_$terminate_seg entry(pointer, fixed binary(1), fixed binary(35));
 declare ioa_ entry options(variable);
 declare suffixed_name_$new_suffix
      entry(character(*), character(*), character(*), character(32),
 	   fixed binary(35));
+declare write_into_ entry(pointer, entry, character(*), character(*));
 
 declare argument character(argument_length) based(argument_pointer);
 declare argument_length fixed binary(21);
 declare argument_pointer pointer;
+declare bits_read fixed binary(24);
 declare brief bit initial("0"b);
 declare cleanup label initial(finished);
 declare command_name character(command_name_length) based(command_name_pointer);
 declare command_name_length fixed binary(21);
 declare command_name_pointer pointer;
+declare compress_bad_code condition;
+declare compress_fatal condition;
 declare compressed_entryname character(32);
+declare compressed_input bit(input_segment_bitcount)
+     based(input_segment_pointer);
+declare compressed_output bit(255*1024*36) based(output_segment_pointer);
 declare decompress bit initial("0"b);
+declare delete_$path entry(character(*), character(*), bit(36) aligned,
+			   character(*), fixed binary(35));
 declare error_code fixed binary(35);
 declare index fixed binary;
 declare input_dir_name character(168);
 declare input_segment_bitcount fixed binary(24);
 declare input_segment_pointer pointer initial(null);
 declare null builtin;
+declare output_segment_bitcount fixed binary(24);
 declare output_segment_pointer pointer initial(null);
 declare pathname character(pathname_length) based(pathname_pointer);
 declare pathname_length fixed binary(21);
 declare pathname_pointer pointer initial(null);
 declare replace bit initial("0"b);
 declare uncompressed_entryname character(32);
+declare uncompressed_input(divide(input_segment_bitcount + 8, 9, 20)) bit(9)
+     based(input_segment_pointer);
+declare uncompressed_output(255*1024*4) bit(9) based(output_segment_pointer);
 declare unknown character(9) static initial("(unknown)");
 
 goto start;
@@ -54,6 +74,13 @@ uncompress: entry options(variable);
 decompress = "1"b;
 
 start:
+on compress_fatal goto finished;
+
+on compress_bad_code begin;
+   call com_err_(0, command_name, "bad code at index ^d", bits_read);
+   goto finished;
+end;
+
 call cu_$get_command_name(command_name_pointer, command_name_length,
 			  error_code);
 if error_code ^= 0 then do;
@@ -107,9 +134,44 @@ if output_segment_pointer = null then do;
    call com_err_(error_code, command_name,
 		 "Could not initiate output segment ^a.", output_entryname());
 end;
+if error_code = error_table_$namedup
+     | error_code = error_table_$segknown then begin;
+   declare answer bit;
+   call command_query_$yes_no(answer, error_table_$namedup, command_name, "",
+			      "Do you want to delete the old segment ^a?",
+			      output_entryname());
+   if ^answer
+      then goto finished;
+end;
 
-call ioa_("^a, ^a, ^a, ^b, ^b, ^b", input_dir_name, compressed_entryname,
-	  uncompressed_entryname, decompress, brief, replace);
+call write_into_(output_segment_pointer, write, command_name,
+		 output_entryname());
+
+if replace then do;
+   call delete_$path(input_dir_name, input_entryname(), "100110"b, command_name,
+		     error_code);
+   if error_code ^= 0 then do;
+      call com_err_(error_code, "Could not delete ^a>^a.", input_dir_name,
+		    input_entryname());
+      goto finished;
+   end;
+   input_segment_pointer = null;
+end;
+
+if ^brief
+   then call ioa_("Old length = ^d, new length = ^d.",
+		  divide(input_segment_bitcount + 1024*36 - 1, 1024*36, 9),
+		  divide(output_segment_bitcount + 1024*36 - 1, 1024*36, 9));
+
+write: procedure returns(fixed binary(24));
+   if decompress
+      then output_segment_bitcount
+	     = decompress_(compressed_input, uncompressed_output, bits_read);
+      else output_segment_bitcount
+	     = compress_(uncompressed_input, compressed_output,
+			 input_segment_bitcount);
+   return(output_segment_bitcount);
+end;
 
 input_entryname: procedure returns(character(*));
    if decompress
@@ -150,12 +212,22 @@ usage_error: procedure(error_code);
 end;
 
 finished:
+
 if input_segment_pointer ^= null then do;
    call hcs_$terminate_noname(input_segment_pointer, error_code);
    if error_code ^= 0 then do;
-      call com_err_(error_code, "compress",
+      call com_err_(error_code, command_name,
 		    "Could not terminate input segment ^a>^a.", input_dir_name,
-		    input_entryname);
+		    input_entryname());
+   end;
+end;
+
+if output_segment_pointer ^= null then do;
+   if error_code ^= 0 then do;
+      call com_err_(error_code, command_name,
+		    "Could not terminate output segment ^a.",
+		    output_entryname());
+      goto finished;
    end;
 end;
 
