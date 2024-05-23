@@ -46,6 +46,12 @@ declare replace bit initial("0"b);
 declare uncompressed_entryname character(32);
 declare unknown character(9) static initial("(unknown)");
 
+goto start;
+
+uncompress: entry options(variable);
+decompress = "1"b;
+
+start:
 call cu_$get_command_name(command_name_pointer, command_name_length,
 			  error_code);
 if error_code ^= 0 then do;
