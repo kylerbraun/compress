@@ -11,9 +11,12 @@ declare expand_pathname_
 declare expand_pathname_$add_suffix
      entry(character(*), character(*), character(*), character(*),
 	   fixed binary(35));
+declare get_wdir_ entry returns(character(168));
 declare hcs_$initiate_count
      entry(character(*), character(*), character(*), fixed binary(24),
 	   fixed binary(2), pointer, fixed binary(35));
+declare hcs_$make_seg entry(character(*), character(*), character(*),
+			    fixed binary(5), pointer, fixed binary(35));
 declare hcs_$terminate_noname
      entry(pointer, fixed binary(35));
 declare ioa_ entry options(variable);
@@ -37,7 +40,6 @@ declare input_dir_name character(168);
 declare input_segment_bitcount fixed binary(24);
 declare input_segment_pointer pointer initial(null);
 declare null builtin;
-declare output_entryname character(32);
 declare output_segment_pointer pointer initial(null);
 declare pathname character(pathname_length) based(pathname_pointer);
 declare pathname_length fixed binary(21);
@@ -93,16 +95,18 @@ call hcs_$initiate_count
        (input_dir_name, input_entryname(), "", input_segment_bitcount, 0,
 	input_segment_pointer, error_code);
 if input_segment_pointer = null then do;
-   call com_err_(error_code, "compress",
+   call com_err_(error_code, command_name,
 		 "Could not initiate input segment ^a>^a.", input_dir_name,
 		 input_entryname());
    goto finished;
 end;
 
-/*
-call hcs_$make_seg("", output_entryname, "", 01010b, output_segment_pointer,
-		   error_code);
-*/
+call hcs_$make_seg(get_wdir_(), output_entryname(), "", 01010b,
+		   output_segment_pointer, error_code);
+if output_segment_pointer = null then do;
+   call com_err_(error_code, command_name,
+		 "Could not initiate output segment ^a.", output_entryname());
+end;
 
 call ioa_("^a, ^a, ^a, ^b, ^b, ^b", input_dir_name, compressed_entryname,
 	  uncompressed_entryname, decompress, brief, replace);
@@ -111,6 +115,12 @@ input_entryname: procedure returns(character(*));
    if decompress
       then return(compressed_entryname);
       else return(uncompressed_entryname);
+end;
+
+output_entryname: procedure returns(character(*));
+   if decompress
+      then return(uncompressed_entryname);
+      else return(compressed_entryname);
 end;
 
 fail: procedure(error_code, message);
