@@ -20,10 +20,25 @@ ec test make_code_
    ec expect ||[contents c12345_code -nl] ||[call call_make_code_ 0 ;||]
 -TEST_END
 
-&set n [value_get tests_passed]
-&set d [value_get tests_run]
-&set percent [calc &(n)/&(d)*100]
-format_line "^/^d of ^d tests passed (^d%)." &(n) &(d)
-&+	    [round &(percent) [plus [index &(percent) .] 2]]
+ec test write_header_
+   truncate test_header
+   call_write_header_
+   ec expect ||[contents example_header -nl] ||[contents test_header -nl]
+-TEST_END
+
+ec test read_header_
+   ec expect
+&- For some reason, the `call` command prints an extra leading newline, which
+&- we must account for in this test.  Note that the file example_code already
+&- contains a leading newline.
+&+   [flnnl "^/padding size: 8^/used: 83^a" ||[contents example_code -nl]]
+&+   ||[call call_read_header_ 0 ;||]
+-TEST_END
+
+&set n &[value_get tests_passed]
+&set d &[value_get tests_run]
+&set percent &[calc &(n)/&(d)*100]
+&set r &[round &(percent) [plus [index &(percent) .] 1]]
+format_line "^/^d of ^d tests passed (^a%)." &(n) &(d) &(r)
 value_delete tests_passed
 value_delete tests_run
