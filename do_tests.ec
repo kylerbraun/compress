@@ -12,6 +12,14 @@ ec test count_bytes_
    ec expect ||[contents c12345_counts -nl] ||[call_count_bytes_ ;||]
 -TEST_END
 
+ec test print_code_
+   ec expect ||[contents example_code -nl] ||[call call_print_code_ 0 ;||]
+-TEST_END
+
+ec test make_code_
+   ec expect ||[contents c12345_code -nl] ||[call call_make_code_ 0 ;||]
+-TEST_END
+
 &set n [value_get tests_passed]
 &set d [value_get tests_run]
 &set percent [calc &(n)/&(d)*100]
