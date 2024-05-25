@@ -3,8 +3,17 @@
 io put_chars user_output "Running test &q1... " -remove_newline
 io attach test_commands vfile_ test_commands.ec -truncate
 io open test_commands stream_output
-io put_chars test_commands "&&version 2&NL&&trace &&command off"
-io put_chars test_commands [ec get_block] -allow_newline
+
+io put_chars test_commands [format_line "&&version 2^/&&trace &&command off^/
+&+ &&on error command_error compress_bad_code compress_fatal
+     &+ compress_test_fatal &&begin^/
+&+^a&&exit &&continue^/
+&+&&end^/
+&+^a^a"
+&+					||[value_get test_teardown -default ""]
+&+					||[value_get test_setup -default ""]
+&+					[ec get_block]]
+
 io close test_commands
 io detach test_commands
 &set failed false
