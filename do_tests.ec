@@ -35,10 +35,22 @@ ec test read_header_
 &+   ||[call call_read_header_ 0 ;||]
 -TEST_END
 
+ec test compress_
+   truncate test_fz
+   call_compress_
+   ec expect ||[contents c12345_fz -nl] ||[contents test_fz -nl]
+-TEST_END
+
+ec test decompress_
+   truncate test_unfz
+   call_decompress_
+   ec expect ||[contents c12345 -nl] ||[contents test_unfz -nl]
+-TEST_END
+
 &set n &[value_get tests_passed]
 &set d &[value_get tests_run]
 &set percent &[calc &(n)/&(d)*100]
-&set r &[round &(percent) [plus [index &(percent) .] 1]]
+&set r &[round &(percent) [plus [index &(percent). .] 1]]
 format_line "^/^d of ^d tests passed (^a%)." &(n) &(d) &(r)
 value_delete tests_passed
 value_delete tests_run
