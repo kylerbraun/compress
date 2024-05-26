@@ -75,6 +75,11 @@ ec test bad_option
 		       &+ -nonexistent^/"]
 -TEST_END
 
+ec test extra_arg
+   ec check_error "compress file file2"
+&+		  [fl "compress: Usage: compress path {-control_args}^/"]
+-TEST_END
+
 &set n &[value_get tests_passed]
 &set d &[value_get tests_run]
 &set percent &[calc &(n)/&(d)*100]
