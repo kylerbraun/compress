@@ -118,6 +118,12 @@ ec test no_output_permission
 		       &+ output segment &!.fz.^/" [wd]]
 -TEST_END
 
+ec test compress_empty
+   delete &!.fz
+   ec expect [fl "Old length = 0, new length = 1.^/"] ||[compress &! ;||]
+   ec expect ||[contents empty.fz -nl] ||[contents &!.fz -nl]
+-TEST_END
+
 ec fixture_pop
 
 &set n &[value_get tests_passed]
