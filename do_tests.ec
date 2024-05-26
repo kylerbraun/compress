@@ -80,6 +80,12 @@ ec test extra_arg
 &+		  [fl "compress: Usage: compress path {-control_args}^/"]
 -TEST_END
 
+ec test too_long
+   ec check_error "compress this_entryname_is_more_than_32_character_long"
+&+		  [fl "compress: Entry name too long. Could not expand input
+		       &+ pathname.^/"]
+-TEST_END
+
 &set n &[value_get tests_passed]
 &set d &[value_get tests_run]
 &set percent &[calc &(n)/&(d)*100]
