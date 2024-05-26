@@ -96,12 +96,14 @@ ec test too_long_with_suffix
 
 ec fixture_push
 
-ec fixture setup
-   create &!("" .fz)
--TEST_END
-
 ec fixture teardown
    delete &!("" .fz)
+-TEST_END
+
+ec fixture_push
+
+ec fixture setup
+   create &!("" .fz)
 -TEST_END
 
 ec test no_input_permission
@@ -118,16 +120,30 @@ ec test no_output_permission
 		       &+ output segment &!.fz.^/" [wd]]
 -TEST_END
 
+ec fixture_pop
+
 ec test compress_empty
-   delete &!.fz
+   create &!
    ec expect [fl "Old length = 0, new length = 1.^/"] ||[compress &! ;||]""
    ec expect ||[contents empty.fz -nl]"" ||[contents &!.fz -nl]""
 -TEST_END
 
 ec test compress_empty_fz
-   delete &!.fz
+   create &!
    ec expect "" ||[compress -brief &!.fz ;||]""
    ec expect ||[contents empty.fz -nl]"" ||[contents &!.fz -nl]""
+-TEST_END
+
+ec test uncompress_empty
+   copy empty.fz &!.fz
+   ec expect [fl "Old length = 1, new length = 0.^/"] ||[uncompress &! ;||]""
+   ec expect ||[contents empty -nl]"" ||[contents &! -nl]""
+-TEST_END
+
+ec test uncompress_empty_fz
+   copy empty.fz &!.fz
+   uncompress -brief &!.fz
+   ec expect ||[contents empty -nl]"" ||[contents &! -nl]""
 -TEST_END
 
 ec fixture_pop
