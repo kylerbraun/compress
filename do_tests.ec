@@ -2,6 +2,11 @@
 &trace &command off
 &default *
 &attach
+&on cleanup &begin
+   value_delete -brief -match
+&+		test(s_(passed run match)
+		     &+ _(setup teardown prev_(setup teardown)_length))
+&end
 value_set tests_passed 0 -perprocess
 value_set tests_run 0 -perprocess
 value_set tests_match &r1 -perprocess

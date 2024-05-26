@@ -8,13 +8,12 @@
    file_output &!.errors -source_switch error_output
 &end
 
-&on error compress_bad_code compress_fatal compress_test_fail &begin
+&on cleanup &begin
    &if &(error) &then &do
       &if &[not [equal &(desc) [io attach_desc error_output]]]
          &then revert_output -source_switch error_output
       delete ([segments -inhibit_error &!.errors])
    &end
-   &exit &continue
 &end
 
 &1

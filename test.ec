@@ -20,10 +20,8 @@ io attach test_commands vfile_ &!.ec -truncate
 io open test_commands stream_output
 
 io put_chars test_commands [format_line "&&version 2^/&&trace &&command off^/
-&+ &&on error command_error compress_bad_code compress_fatal
-     &+ compress_test_fail &&begin^/
-&+^a&&exit &&continue^/
-&+&&end^/
+&+ &&on cleanup &&begin^/
+&+^a&&end^/
 &+^a^a^a"
 &+					||[value_get test_teardown -default ""]
 &+					||[value_get test_setup -default ""]
@@ -32,15 +30,21 @@ io put_chars test_commands [format_line "&&version 2^/&&trace &&command off^/
 
 io (close detach) test_commands
 &set failed false
-&on error command_error compress_bad_code compress_fatal compress_test_fail
-&+ &begin
-   &print FAIL
-   &if &[not [equal &condition_name command_error]]
-      &then &goto inc_run
-      &else &set failed true
+&on compress_test_fail &begin
+   &goto inc_run
+&end
+&on any_other &begin
+   &if &[not &(failed)]
+      &then &print FAIL
+   &if &[equal &condition_name command_error]
+      &then &set failed true
+      &else &exit &continue
+&end
+&on program_interrupt &begin
+   &goto inc_run
 &end
 ec &!
-&revert command_error
+&revert any_other
 &if &(failed)
    &then &goto inc_run
 &print PASS
