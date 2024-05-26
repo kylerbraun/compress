@@ -98,7 +98,6 @@ ec fixture_push
 
 ec fixture setup
    create &!("" .fz)
-   set_acl &!("" .fz) n
 -TEST_END
 
 ec fixture teardown
@@ -106,9 +105,17 @@ ec fixture teardown
 -TEST_END
 
 ec test no_input_permission
+   set_acl &! n
    ec check_error "compress &!"
 &+		  [fl "compress: Incorrect access on entry. Could not initiate
 		       &+ input segment ^a>&!.^/" [wd]]
+-TEST_END
+
+ec test no_output_permission
+   set_acl &!.fz n
+   ec check_error "compress &!"
+&+		  [fl "compress: Incorrect access on entry. Could not initiate
+		       &+ output segment &!.fz.^/" [wd]]
 -TEST_END
 
 ec fixture_pop

@@ -133,6 +133,7 @@ call hcs_$make_seg(get_wdir_(), output_entryname(), "", 01010b,
 if output_segment_pointer = null then do;
    call com_err_(error_code, command_name,
 		 "Could not initiate output segment ^a.", output_entryname());
+   goto finished;
 end;
 if error_code = error_table_$namedup
      | error_code = error_table_$segknown then begin;
