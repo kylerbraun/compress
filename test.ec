@@ -1,5 +1,11 @@
 &version 2
 &trace &command off
+&if &[not [equal ||[call match_star_name_ &r1 ||[value_get tests_match]
+&+					  -out -code -ret]
+&+		 ""]] &then &do
+   ec get_block ;| discard_
+   &quit
+&end
 io put_chars user_output "Running test &q1... " -remove_newline
 io attach test_commands vfile_ &!.ec -truncate
 io open test_commands stream_output

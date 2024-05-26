@@ -1,8 +1,10 @@
 &version 2
 &trace &command off
+&default *
 &attach
 value_set tests_passed 0 -perprocess
 value_set tests_run 0 -perprocess
+value_set tests_match &r1 -perprocess
 
 ec test print_counts_
    ec expect ||[contents example_counts -nl] ||[call_print_counts_ ;||]
@@ -116,4 +118,5 @@ ec fixture_pop
 &set percent &[calc &(n)/&(d)*100]
 &set r &[round &(percent) [plus [index &(percent). .] 1]]
 format_line "^/^d of ^d tests passed (^a%)." &(n) &(d) &(r)
-value_delete test(s_(passed run) _(setup teardown prev_(setup teardown)_length))
+value_delete test(s_(passed run match)
+		  &+ _(setup teardown prev_(setup teardown)_length))
