@@ -7,25 +7,25 @@ value_set tests_run 0 -perprocess
 value_set tests_match &r1 -perprocess
 
 ec test print_counts_
-   ec expect ||[contents example_counts -nl]"" ||[call_print_counts_ ;||]""
+   ec expect ||[contents example_counts -nl] ||[call_print_counts_ ;||]""
 -TEST_END
 
 ec test count_bytes_
-   ec expect ||[contents c12345_counts -nl]"" ||[call_count_bytes_ ;||]""
+   ec expect ||[contents c12345_counts -nl] ||[call_count_bytes_ ;||]""
 -TEST_END
 
 ec test print_code_
-   ec expect ||[contents example_code -nl]"" ||[call call_print_code_ 0 ;||]""
+   ec expect ||[contents example_code -nl] ||[call call_print_code_ 0 ;||]""
 -TEST_END
 
 ec test make_code_
-   ec expect ||[contents c12345_code -nl]"" ||[call call_make_code_ 0 ;||]""
+   ec expect ||[contents c12345_code -nl] ||[call call_make_code_ 0 ;||]""
 -TEST_END
 
 ec test write_header_
    truncate test_header
    call_write_header_
-   ec expect ||[contents example_header -nl]"" ||[contents test_header -nl]""
+   ec expect ||[contents example_header -nl] ||[contents test_header -nl]
 -TEST_END
 
 ec test read_header_
@@ -33,20 +33,20 @@ ec test read_header_
 &- For some reason, the `call` command prints an extra leading newline, which
 &- we must account for in this test.  Note that the file example_code already
 &- contains a leading newline.
-&+   [flnnl "^/padding size: 8^/used: 83^a" ||[contents example_code -nl]""]
+&+   [flnnl "^/padding size: 8^/used: 83^a" ||[contents example_code -nl]]
 &+   ||[call call_read_header_ 0 ;||]""
 -TEST_END
 
 ec test compress_
    truncate test_fz
    call_compress_
-   ec expect ||[contents c12345_fz -nl]"" ||[contents test_fz -nl]""
+   ec expect ||[contents c12345_fz -nl] ||[contents test_fz -nl]
 -TEST_END
 
 ec test decompress_
    truncate test_unfz
    call_decompress_
-   ec expect ||[contents c12345 -nl]"" ||[contents test_unfz -nl]""
+   ec expect ||[contents c12345 -nl] ||[contents test_unfz -nl]
 -TEST_END
 
 ec test nullary
@@ -125,26 +125,49 @@ ec fixture_pop
 ec test compress_empty
    create &!
    ec expect [fl "Old length = 0, new length = 1.^/"] ||[compress &! ;||]""
-   ec expect ||[contents empty.fz -nl]"" ||[contents &!.fz -nl]""
+   ec expect ||[contents empty.fz -nl] ||[contents &!.fz -nl]
 -TEST_END
 
 ec test compress_empty_fz
    create &!
    ec expect "" ||[compress -brief &!.fz ;||]""
-   ec expect ||[contents empty.fz -nl]"" ||[contents &!.fz -nl]""
+   ec expect ||[contents empty.fz -nl] ||[contents &!.fz -nl]
 -TEST_END
 
 ec test uncompress_empty
    copy empty.fz &!.fz
    ec expect [fl "Old length = 1, new length = 0.^/"] ||[uncompress &! ;||]""
-   ec expect ||[contents empty -nl]"" ||[contents &! -nl]""
+   ec expect ||[contents empty -nl] ||[contents &! -nl]
 -TEST_END
 
 ec test uncompress_empty_fz
    copy empty.fz &!.fz
    uncompress -brief &!.fz
-   ec expect ||[contents empty -nl]"" ||[contents &! -nl]""
+   ec expect ||[contents empty -nl] ||[contents &! -nl]
 -TEST_END
+
+ec fixture_push
+
+ec fixture setup
+   create &!
+   flnnl text ;| &!.fz
+-TEST_END
+
+ec test namedup_no
+   ec expect [fl "^/compress: Name duplication. Do you want to delete the old
+		  &+ segment &!.fz?   no^/"] ||[answer no compress &! ;||]""
+   ec expect text ||[contents &!.fz -nl]
+-TEST_END
+
+ec test namedup_yes
+   ec expect [fl "^/compress: Name duplication. Do you want to delete the old
+		  &+ segment &!.fz?   yes^/
+		  &+Old length = 0, new length = 1.^/"]
+&+	     ||[answer yes compress &! ;||]""
+   ec expect ||[contents empty.fz -nl] ||[contents &!.fz -nl]
+-TEST_END
+
+ec fixture_pop
 
 ec fixture_pop
 
