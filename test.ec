@@ -6,13 +6,14 @@ io open test_commands stream_output
 
 io put_chars test_commands [format_line "&&version 2^/&&trace &&command off^/
 &+ &&on error command_error compress_bad_code compress_fatal
-     &+ compress_test_fatal &&begin^/
+     &+ compress_test_fail &&begin^/
 &+^a&&exit &&continue^/
 &+&&end^/
-&+^a^a"
+&+^a^a^a"
 &+					||[value_get test_teardown -default ""]
 &+					||[value_get test_setup -default ""]
-&+					[ec get_block]]
+&+					[ec get_block]
+&+					||[value_get test_teardown -default ""]]
 
 io close test_commands
 io detach test_commands

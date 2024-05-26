@@ -92,10 +92,28 @@ ec test too_long_with_suffix
 		       &+ pathname.^/"]
 -TEST_END
 
+ec fixture_push
+
+ec fixture setup
+   create &!("" .fz)
+   set_acl &!("" .fz) n
+-TEST_END
+
+ec fixture teardown
+   delete &!("" .fz)
+-TEST_END
+
+ec test no_input_permission
+   ec check_error "compress &!"
+&+		  [fl "compress: Incorrect access on entry. Could not initiate
+		       &+ input segment ^a>&!.^/" [wd]]
+-TEST_END
+
+ec fixture_pop
+
 &set n &[value_get tests_passed]
 &set d &[value_get tests_run]
 &set percent &[calc &(n)/&(d)*100]
 &set r &[round &(percent) [plus [index &(percent). .] 1]]
 format_line "^/^d of ^d tests passed (^a%)." &(n) &(d) &(r)
-value_delete tests_passed
-value_delete tests_run
+value_delete test(s_(passed run) _(setup teardown prev_(setup teardown)_length))
