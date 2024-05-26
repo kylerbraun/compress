@@ -86,6 +86,12 @@ ec test too_long
 		       &+ pathname.^/"]
 -TEST_END
 
+ec test too_long_with_suffix
+   ec check_error "compress this_names_smthg_with_30_chars"
+&+		  [fl "compress: Entry name too long. Could not expand input
+		       &+ pathname.^/"]
+-TEST_END
+
 &set n &[value_get tests_passed]
 &set d &[value_get tests_run]
 &set percent &[calc &(n)/&(d)*100]
