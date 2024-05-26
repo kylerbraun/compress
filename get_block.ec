@@ -1,9 +1,9 @@
 &version 2
 &trace &command off
 &set result """"""
-io attach test_discard discard_
-io open test_discard stream_output
-syn_output test_discard
+io move_attach user_output test_save_&!
+io attach user_output discard_
+io open user_output stream_output
 &label loop
    &set line &||[io get_line user_input -allow_newline]
    &if &[equal &(line) "-TEST_END&NL"] &then &do
@@ -12,7 +12,6 @@ syn_output test_discard
    &set result &||[format_line_nnl "^a^a" &(result) &(line)]
    &goto loop
 &label loop_end
-revert_output
-io close test_discard
-io detach test_discard
+io (close detach) user_output
+io move_attach test_save_&! user_output
 &return &(result)

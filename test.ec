@@ -30,8 +30,7 @@ io put_chars test_commands [format_line "&&version 2^/&&trace &&command off^/
 &+					[ec get_block]
 &+					||[value_get test_teardown -default ""]]
 
-io close test_commands
-io detach test_commands
+io (close detach) test_commands
 &set failed false
 &on error command_error compress_bad_code compress_fatal compress_test_fail
 &+ &begin
