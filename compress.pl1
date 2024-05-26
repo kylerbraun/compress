@@ -206,7 +206,7 @@ usage_error: procedure(error_code);
 
    declare cu_error_code fixed binary(35);
 
-   call com_err_(error_code, command_name, "Usage: ^a {-control_args}",
+   call com_err_(error_code, command_name, "Usage: ^a path {-control_args}",
 		 command_name);
    goto finished;
 end;

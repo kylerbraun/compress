@@ -47,6 +47,28 @@ ec test decompress_
    ec expect ||[contents c12345 -nl] ||[contents test_unfz -nl]
 -TEST_END
 
+ec test nullary
+   ec check_error compress [fl "compress: Expected argument missing.
+				&+ Usage: compress path {-control_args}^/"]
+-TEST_END
+
+ec test nullary_uncompress
+   ec check_error uncompress [fl "uncompress: Expected argument missing.
+				  &+ Usage: uncompress path {-control_args}^/"]
+-TEST_END
+
+ec test not_found
+   ec check_error "compress nonexistent"
+&+		  [fl "compress: Entry not found. Could not initiate
+		       &+ input segment ^a>nonexistent.^/" [wd]]
+-TEST_END
+
+ec test not_found_uncompress
+   ec check_error "uncompress nonexistent"
+&+		  [fl "uncompress: Entry not found. Could not initiate
+		       &+ input segment ^a>nonexistent.fz.^/" [wd]]
+-TEST_END
+
 &set n &[value_get tests_passed]
 &set d &[value_get tests_run]
 &set percent &[calc &(n)/&(d)*100]
