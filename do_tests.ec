@@ -69,6 +69,12 @@ ec test not_found_uncompress
 		       &+ input segment ^a>nonexistent.fz.^/" [wd]]
 -TEST_END
 
+ec test bad_option
+   ec check_error "compress -nonexistent"
+&+		  [fl "compress: Specified control argument is not accepted.
+		       &+ -nonexistent^/"]
+-TEST_END
+
 &set n &[value_get tests_passed]
 &set d &[value_get tests_run]
 &set percent &[calc &(n)/&(d)*100]
