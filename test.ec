@@ -41,7 +41,10 @@ io (close detach) test_commands
       &else &exit &continue
 &end
 &on program_interrupt &begin
-   &goto inc_run
+   &goto continue
+&end
+&on cleanup &begin
+  delete ([files &!.ec])
 &end
 ec &!
 &revert any_other
@@ -52,3 +55,7 @@ value_set tests_passed -add 1
 &label inc_run
 delete &!.ec
 value_set tests_run -add 1
+&quit
+&label continue
+&signal test_continue
+&goto inc_run

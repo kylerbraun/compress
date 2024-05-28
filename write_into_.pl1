@@ -15,7 +15,7 @@ declare status_code fixed binary(35);
 
 call hcs_$truncate_seg(segment, 0, status_code);
 if status_code ^= 0 then do;
-   call com_err_(status_code, caller, "could not truncate ^a", entryname);
+   call com_err_(status_code, caller, "Could not truncate ^a.", entryname);
    signal compress_fatal;
    return;
 end;

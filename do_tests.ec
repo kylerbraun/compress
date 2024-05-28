@@ -1,11 +1,21 @@
 &version 2
 &trace &command off
 &default *
-&attach
+io move_attach user_input test_saved_input_&!
+io attach user_input syn_ &ec_switch
 &on cleanup &begin
    value_delete -brief -match
 &+		test(s_(passed run match)
 		     &+ _(setup teardown prev_(setup teardown)_length))
+&end
+&on any_other &begin
+   io detach user_input
+   io move_attach test_saved_input_&! user_input
+   &exit &continue
+&end
+&on test_continue &begin
+   io move_attach user_input test_saved_input_&!
+   io attach user_input syn_ &ec_switch
 &end
 value_set tests_passed 0 -perprocess
 value_set tests_run 0 -perprocess
@@ -172,6 +182,15 @@ ec test namedup_yes
    ec expect ||[contents empty.fz -nl] ||[contents &!.fz -nl]
 -TEST_END
 
+ec test no_write_permission
+   set_acl &!.fz r
+   ec check_error "ec expect [fl ""^/compress: Name duplication. Do you want to
+			         &+ delete the old segment &!.fz?   yes^/""]
+		   &+ ||[answer yes compress &! ;||]"""""
+&+		  [fl "compress: Incorrect access on entry. Could not truncate
+		       &+ &!.fz.^/"]
+-TEST_END
+
 ec fixture_pop
 
 ec fixture_pop
@@ -183,3 +202,5 @@ ec fixture_pop
 format_line "^/^d of ^d tests passed (^a%)." &(n) &(d) &(r)
 value_delete test(s_(passed run match)
 		  &+ _(setup teardown prev_(setup teardown)_length))
+io detach user_input
+io move_attach test_saved_input_&! user_input
