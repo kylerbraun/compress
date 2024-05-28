@@ -14,4 +14,5 @@ io open user_output stream_output
 &label loop_end
 io (close detach) user_output
 io move_attach test_save_&! user_output
+io destroy_iocb test_save_&!
 &return &(result)

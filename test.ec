@@ -11,6 +11,7 @@
       &if &[equal &(line) "-TEST_END&NL"] &then &do
 	 io (close detach) user_output
 	 io move_attach test_save_&! user_output
+	 io destroy_iocb test_save_&!
 	 &quit
       &end
    &goto discard_loop

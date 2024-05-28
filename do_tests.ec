@@ -7,6 +7,7 @@ io attach user_input syn_ &ec_switch
    value_delete -brief -match
 &+		test(s_(passed run match)
 		     &+ _(setup teardown prev_(setup teardown)_length))
+   io destroy_iocb test_saved_input_&!
 &end
 &on any_other &begin
    io detach user_input
@@ -204,3 +205,4 @@ value_delete test(s_(passed run match)
 		  &+ _(setup teardown prev_(setup teardown)_length))
 io detach user_input
 io move_attach test_saved_input_&! user_input
+io destroy_iocb test_saved_input_&!
