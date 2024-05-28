@@ -1,4 +1,6 @@
 &version 2
 &trace &command off
-value_set test_&1 [fl "^a^a" ||[value_get test_&1 -default ""] [ec get_block]]
+&set prefix &[value_get test_prefix]
+value_set &(prefix).&1 [fl "^a^a" ||[value_get &(prefix).&1 -default ""]
+&+				  [ec get_block]]
 &+	  -perprocess

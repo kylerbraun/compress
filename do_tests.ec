@@ -1,26 +1,26 @@
 &version 2
 &trace &command off
 &default *
-io move_attach user_input test_saved_input_&!
+value_set test_prefix &! -perprocess -push
+io move_attach user_input &!.saved_input
 io attach user_input syn_ &ec_switch
 &on cleanup &begin
-   value_delete -brief -match
-&+		test(s_(passed run match)
-		     &+ _(setup teardown prev_(setup teardown)_length))
-   io destroy_iocb test_saved_input_&!
+   value_delete -brief -match &!.* -perprocess
+   value_set -pop test_prefix
+   io destroy_iocb &!.saved_input
 &end
 &on any_other &begin
    io detach user_input
-   io move_attach test_saved_input_&! user_input
+   io move_attach &!.saved_input user_input
    &exit &continue
 &end
 &on test_continue &begin
-   io move_attach user_input test_saved_input_&!
+   io move_attach user_input &!.saved_input
    io attach user_input syn_ &ec_switch
 &end
-value_set tests_passed 0 -perprocess
-value_set tests_run 0 -perprocess
-value_set tests_match &r1 -perprocess
+value_set &!.passed 0 -perprocess
+value_set &!.run 0 -perprocess
+value_set &!.match &r1 -perprocess
 
 ec test print_counts_
    ec expect ||[contents example_counts -nl] ||[call_print_counts_ ;||]""
@@ -196,13 +196,13 @@ ec fixture_pop
 
 ec fixture_pop
 
-&set n &[value_get tests_passed]
-&set d &[value_get tests_run]
+&set n &[value_get &!.passed]
+&set d &[value_get &!.run]
 &set percent &[calc &(n)/&(d)*100]
 &set r &[round &(percent) [plus [index &(percent). .] 1]]
 format_line "^/^d of ^d tests passed (^a%)." &(n) &(d) &(r)
-value_delete test(s_(passed run match)
-		  &+ _(setup teardown prev_(setup teardown)_length))
+value_delete -match &!.* -perprocess
 io detach user_input
-io move_attach test_saved_input_&! user_input
-io destroy_iocb test_saved_input_&!
+io move_attach &!.saved_input user_input
+io destroy_iocb &!.saved_input
+value_set -pop test_prefix

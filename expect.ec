@@ -3,5 +3,5 @@
 &if &[not [equal &r1 &r2]] &then &do
    &print FAIL
    &print expected:&NL&r1&NLgot:&NL&r2
-   &signal compress_test_fail
+   &signal test_fail
 &end

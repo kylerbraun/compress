@@ -1,7 +1,7 @@
 &version 2
 &trace &command off
 &set result """"""
-io move_attach user_output test_save_&!
+io move_attach user_output &!.save_output
 io attach user_output discard_
 io open user_output stream_output
 &label loop
@@ -13,6 +13,6 @@ io open user_output stream_output
    &goto loop
 &label loop_end
 io (close detach) user_output
-io move_attach test_save_&! user_output
-io destroy_iocb test_save_&!
+io move_attach &!.save_output user_output
+io destroy_iocb &!.save_output
 &return &(result)

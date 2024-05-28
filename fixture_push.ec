@@ -1,10 +1,11 @@
 &version 2
 &trace &command off
-&if &[not [value_defined test_prev_setup_length]]
-   &then value_set -perprocess test_prev_setup_length 0
-&if &[not [value_defined test_prev_teardown_length]]
-   &then value_set -perprocess test_prev_teardown_length 0
-value_set -push test_prev_setup_length
-&+	  [length ||[value_get test_setup -default ""]]
-value_set -push test_prev_teardown_length
-&+	  [length ||[value_get test_teardown -default ""]]
+&set prefix &[value_get test_prefix]
+&if &[not [value_defined &(prefix).p_setup_len]]
+   &then value_set -perprocess &(prefix).p_setup_len 0
+&if &[not [value_defined &(prefix).p_teardown_len]]
+   &then value_set -perprocess &(prefix).p_teardown_len 0
+value_set -push &(prefix).p_setup_len
+&+	  [length ||[value_get &(prefix).setup -default ""]]
+value_set -push &(prefix).p_teardown_len
+&+	  [length ||[value_get &(prefix).teardown -default ""]]
