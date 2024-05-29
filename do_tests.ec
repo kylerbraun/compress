@@ -49,7 +49,8 @@ ec test read_header_
 &- For some reason, the `call` command prints an extra leading newline, which
 &- we must account for in this test.  Note that the file example_code already
 &- contains a leading newline.
-&+   [flnnl "^/padding size: 8^/used: 83^a" ||[contents example_code -nl]]
+&+   [flnnl "^/padding size: 8^/header length (bits): 83^a"
+&+   ||[contents example_code -nl]]
 &+   ||[call call_read_header_ 0 ;||]""
 -TEST_END
 

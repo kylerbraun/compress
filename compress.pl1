@@ -27,6 +27,7 @@ declare hcs_$make_seg entry(character(*), character(*), character(*),
 declare hcs_$terminate_noname entry(pointer, fixed binary(35));
 declare hcs_$terminate_seg entry(pointer, fixed binary(1), fixed binary(35));
 declare ioa_ entry options(variable);
+declare print_header_ entry(bit(*), bit);
 declare suffixed_name_$new_suffix
      entry(character(*), character(*), character(*), character(32),
 	   fixed binary(35));
@@ -47,14 +48,18 @@ declare compressed_entryname character(32);
 declare compressed_input bit(input_segment_bitcount)
      based(input_segment_pointer);
 declare compressed_output bit(255*1024*36) based(output_segment_pointer);
-declare decompress bit initial("0"b);
 declare delete_$path entry(character(*), character(*), bit(36) aligned,
 			   character(*), fixed binary(35));
+declare error condition;
 declare error_code fixed binary(35);
 declare index fixed binary;
 declare input_dir_name character(168);
 declare input_segment_bitcount fixed binary(24);
 declare input_segment_pointer pointer initial(null);
+declare mode fixed binary;
+declare mode_compress fixed binary static initial(0) options(constant);
+declare mode_header fixed binary static initial(2) options(constant);
+declare mode_decompress fixed binary static initial(1) options(constant);
 declare null builtin;
 declare output_segment_bitcount fixed binary(24);
 declare output_segment_pointer pointer initial(null);
@@ -66,12 +71,17 @@ declare uncompressed_entryname character(32);
 declare uncompressed_input(divide(input_segment_bitcount + 8, 9, 20)) bit(9)
      based(input_segment_pointer);
 declare uncompressed_output(255*1024*4) bit(9) based(output_segment_pointer);
-declare unknown character(9) static initial("(unknown)");
+declare unknown character(9) static initial("(unknown)") options(constant);
 
+mode = mode_compress;
+goto start;
+
+print_compressed_header: entry options(variable);
+mode = mode_header;
 goto start;
 
 uncompress: entry options(variable);
-decompress = "1"b;
+mode = mode_decompress;
 
 start:
 on compress_fatal goto finished;
@@ -93,11 +103,17 @@ do index = 1 by 1;
    if error_code ^= 0 then do;
       goto end_arg_parse;
    end;
-   if argument = "-brief"
-      then brief = "1"b;
-   else if argument = "-replace"
-      then replace = "1"b;
-   else if substr(argument, 1, 1) = "-"
+   if mode ^= mode_header then do;
+      if argument = "-brief" then do;
+	 brief = "1"b;
+	 goto next_arg;
+      end;
+      if argument = "-replace" then do;
+	 replace = "1"b;
+	 goto next_arg;
+      end;
+   end;
+   if substr(argument, 1, 1) = "-"
       then call fail(error_table_$badopt, argument);
    else do;
       if pathname_pointer = null then do;
@@ -106,6 +122,7 @@ do index = 1 by 1;
       end;
       else call usage_error(0);
    end;
+next_arg:
 end;
 end_arg_parse:
 
@@ -125,6 +142,11 @@ if input_segment_pointer = null then do;
    call com_err_(error_code, command_name,
 		 "Could not initiate input segment ^a>^a.", input_dir_name,
 		 input_entryname());
+   goto finished;
+end;
+
+if mode = mode_header then begin;
+   call print_header_(compressed_input, "0"b);
    goto finished;
 end;
 
@@ -165,7 +187,9 @@ if ^brief
 		  divide(output_segment_bitcount + 1024*36 - 1, 1024*36, 9));
 
 write: procedure returns(fixed binary(24));
-   if decompress
+   if mode = mode_header
+      then signal error;
+   if mode = mode_decompress
       then output_segment_bitcount
 	     = decompress_(compressed_input, uncompressed_output, bits_read);
       else output_segment_bitcount
@@ -175,13 +199,15 @@ write: procedure returns(fixed binary(24));
 end;
 
 input_entryname: procedure returns(character(*));
-   if decompress
-      then return(compressed_entryname);
-      else return(uncompressed_entryname);
+   if mode = mode_compress
+      then return(uncompressed_entryname);
+      else return(compressed_entryname);
 end;
 
 output_entryname: procedure returns(character(*));
-   if decompress
+   if mode = mode_header
+      then signal error;
+   if mode = mode_decompress
       then return(uncompressed_entryname);
       else return(compressed_entryname);
 end;

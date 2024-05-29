@@ -1,0 +1,23 @@
+print_header_: procedure(source, full);
+
+declare source bit(*);
+declare full bit;
+
+declare ioa_ entry options(variable);
+declare print_code_ entry(bit(1), dimension(0:511) fixed binary(9),
+			  dimension(0:511) bit(20) varying);
+declare read_header_ entry(bit(*), dimension(0:511) fixed binary(9),
+			   dimension(0:511) bit(20) varying, fixed binary(4))
+		     returns(fixed binary(24));
+
+declare codes(0:511) bit(20) varying;
+declare order(0:511) fixed binary(9);
+declare padding_size fixed binary(4);
+declare used fixed binary(24);
+
+used = read_header_(source, order, codes, padding_size);
+call ioa_("padding size: ^d", padding_size);
+call ioa_("header length (bits): ^d", used);
+call print_code_(full, order, codes);
+
+end print_header_;
