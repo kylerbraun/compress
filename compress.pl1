@@ -151,12 +151,12 @@ call write_into_(output_segment_pointer, write, command_name,
 if replace then do;
    call delete_$path(input_dir_name, input_entryname(), "100110"b, command_name,
 		     error_code);
+   input_segment_pointer = null;
    if error_code ^= 0 then do;
-      call com_err_(error_code, "Could not delete ^a>^a.", input_dir_name,
-		    input_entryname());
+      call com_err_(error_code, command_name, "Could not delete ^a>^a.",
+		    input_dir_name, input_entryname());
       goto finished;
    end;
-   input_segment_pointer = null;
 end;
 
 if ^brief
@@ -224,11 +224,11 @@ if input_segment_pointer ^= null then do;
 end;
 
 if output_segment_pointer ^= null then do;
+   call hcs_$terminate_noname(output_segment_pointer, error_code);
    if error_code ^= 0 then do;
       call com_err_(error_code, command_name,
 		    "Could not terminate output segment ^a.",
 		    output_entryname());
-      goto finished;
    end;
 end;
 

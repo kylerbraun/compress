@@ -208,6 +208,24 @@ ec test uncompress_replace
    ec expect "" ||[files &!.fz]
 -TEST_END
 
+ec fixture_push
+
+ec fixture teardown
+   delete_dir -fc ([directories &!.d])
+-TEST_END
+
+ec test no_modify_permission
+   create_dir &!.d
+   create &!.d>&!
+   set_acl &!.d sa
+   ec check_error "compress -replace &!.d>&!"
+&+		  [fl "compress: Incorrect access to directory containing entry.
+		       &+ Could not delete ^a>&!.d>&!.^/" [wd]]
+   ec expect ||[contents empty.fz -nl] ||[contents &!.fz -nl]
+-TEST_END
+
+ec fixture_pop
+
 ec fixture_pop
 
 &set n &[value_get &!.passed]
