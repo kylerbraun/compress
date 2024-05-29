@@ -113,7 +113,7 @@ ec test too_long_with_suffix
 ec fixture_push
 
 ec fixture teardown
-   delete &!("" .fz)
+   delete ([files &! &!.fz])
 -TEST_END
 
 ec fixture_push
@@ -193,6 +193,20 @@ ec test no_write_permission
 -TEST_END
 
 ec fixture_pop
+
+ec test compress_replace
+   create &!
+   compress -brief -replace &!
+   ec expect ||[contents empty.fz -nl] ||[contents &!.fz -nl]
+   ec expect "" ||[files &!]
+-TEST_END
+
+ec test uncompress_replace
+   copy empty.fz &!.fz
+   uncompress -brief -replace &!
+   ec expect ||[contents empty -nl] ||[contents &! -nl]
+   ec expect "" ||[files &!.fz]
+-TEST_END
 
 ec fixture_pop
 
