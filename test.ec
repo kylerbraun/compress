@@ -4,7 +4,7 @@
 &if &[not [equal ||[call match_star_name_ &r1 ||[value_get &(prefix).match]
 &+					  -out -code -ret]
 &+		 ""]] &then &do
-   io move_attach user_output &(prefix).save_output
+   io move_attach user_output &!.save_output
    io attach user_output discard_
    io open user_output stream_output
    &label discard_loop
