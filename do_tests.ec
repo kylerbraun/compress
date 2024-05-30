@@ -232,6 +232,18 @@ ec test no_modify_permission
 
 ec fixture_pop
 
+ec test compress_hello
+   copy hello &!
+   compress -brief &!
+   ec expect ||[contents hello.fz -nl] ||[contents &!.fz -nl]
+-TEST_END
+
+ec test uncompress_hello
+   copy hello.fz &!.fz
+   uncompress -brief &!
+   ec expect ||[contents hello -nl] ||[contents &! -nl]
+-TEST_END
+
 ec fixture_pop
 
 &set n &[value_get &!.passed]
