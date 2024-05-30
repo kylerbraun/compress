@@ -1,26 +1,26 @@
-decode_: procedure(source, bytes, codes, used) returns(fixed binary(20));
+decode_: procedure(source, bytes, order, codes, used) returns(fixed binary(20));
 
 declare source bit(*);
 declare bytes(*) bit(9);
+declare order(0:511) fixed binary(9);
 declare codes(0:511) bit(20) varying;
 declare used fixed binary(24);
 
-declare com_err_ entry options(variable);
-
 declare compress_bad_code condition;
-declare datum bit(10);
+declare datum bit(9);
 declare i fixed binary(10);
 declare next_code bit(20) varying initial(""b);
 declare written fixed binary(20) initial(0);
 
 do used = used to length(source) - 1;
    next_code = next_code || substr(source, used + 1, 1);
-   do i = lbound(codes, 1) to hbound(codes, 1);
-      if length(next_code) = length(codes(i))
-	    & next_code = codes(i) then do;
-         datum = convert(datum, i);
+   do i = lbound(order, 1) to hbound(order, 1)
+	while(length(codes(order(i))) > 0);
+      if length(next_code) = length(codes(order(i)))
+	    & next_code = codes(order(i)) then do;
+         datum = convert(datum, order(i));
 	 written = written + 1;
-	 bytes(written) = substr(datum, 2);
+	 bytes(written) = datum;
 	 next_code = ""b;
 	 goto next_bit;
       end;

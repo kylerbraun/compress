@@ -6,6 +6,7 @@ declare destination(*) bit(9);
 declare used fixed binary(24);
 
 declare decode_ entry(bit(*), dimension(*) bit(9),
+		      dimension(0:511) fixed binary(9),
 		      dimension(0:511) bit(20) varying, fixed binary(24))
 		  returns(fixed binary(20));
 declare read_header_ entry(bit(*), dimension(0:511) fixed binary(9),
@@ -17,6 +18,6 @@ declare order(0:511) fixed binary(9);
 declare padding_size fixed binary(4);
 
 used = read_header_(source, order, codes, padding_size);
-return(decode_(source, destination, codes, used)*9 - padding_size);
+return(decode_(source, destination, order, codes, used)*9 - padding_size);
 
 end decompress_;
