@@ -4,19 +4,24 @@
 value_set test_prefix &! -perprocess -push
 io move_attach user_input &!.saved_input
 io attach user_input syn_ &ec_switch
+&set attached true
 &on cleanup &begin
    value_delete -brief -match &!.* -perprocess
    value_set -pop test_prefix
    io destroy_iocb &!.saved_input
 &end
 &on any_other &begin
-   io detach user_input
-   io move_attach &!.saved_input user_input
+   &if &(attached) &then &do
+      io detach user_input
+      io move_attach &!.saved_input user_input
+      &set attached false
+   &end
    &exit &continue
 &end
 &on test_continue &begin
    io move_attach user_input &!.saved_input
    io attach user_input syn_ &ec_switch
+   &set attached true
 &end
 value_set &!.passed 0 -perprocess
 value_set &!.run 0 -perprocess

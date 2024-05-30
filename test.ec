@@ -38,9 +38,9 @@ io (close detach destroy_iocb) &!.ec
 &on any_other &begin
    &if &[not &(failed)]
       &then &print FAIL
-   &if &[equal &condition_name command_error]
-      &then &set failed true
-      &else &exit &continue
+   &set failed true
+   &if &[not [equal &condition_name command_error]]
+      &then &exit &continue
 &end
 &on program_interrupt &begin
    &set failed true

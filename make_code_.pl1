@@ -55,12 +55,12 @@ do i = hbound(counts_sorted.vector, 1)
       i.e. the number of codes left once the code is extended by j bits. */
    do j = 0 by 1 while(count*num_codes(j) < total);
    end;
-   if j > length(next_code) then do;
+   if j > 0 then do;
       /* if |count/total - 1/num_codes(j)|
 	      > |count/total - 1/num_codes(j - 1)| */
       /* Since we don't want unnecessary divisions, we convert the above
       expression into units of 1/(total*num_codes(j)) before comparing. */
-      if 3*total > 2*count*num_codes(j) | num_codes(j) > allocations_left(i)
+      if 3*total < count*num_codes(j + 1) | num_codes(j) > allocations_left(i)
 	 then j = j - 1;
    end;
    /* If there are more bytes to encode, make sure we leave some codes available
