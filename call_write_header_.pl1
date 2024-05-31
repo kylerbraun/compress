@@ -1,12 +1,8 @@
 call_write_header_: procedure;
 
-declare make_example_code_ entry(dimension(0:511) fixed binary(9),
-				 dimension(0:511) bit(20) varying);
-declare write_header_ entry(bit(*), dimension(0:511) fixed binary(9),
-			    dimension(0:511) bit(20) varying, fixed binary(4))
-			returns(fixed binary(24));
-declare write_into_ entry(pointer, entry() returns(fixed binary(24)),
-			  char(*), char(*));
+%include make_example_code_;
+%include write_header_;
+%include write_into_;
 
 declare test_header$ bit(512*9 + 512*4 + 4) external static;
 
