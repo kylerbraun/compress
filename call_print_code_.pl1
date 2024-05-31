@@ -1,10 +1,7 @@
 call_print_code_: procedure(full);
 
-declare make_example_code_ entry(dimension(0:511) fixed binary(9),
-				 dimension(0:511) bit(20) varying);
-declare print_code_ entry(bit(1),
-			  dimension(0:511) fixed binary(9),
-			  dimension(0:511) bit(20) varying);
+%include make_example_code_;
+%include print_code_;
 
 declare full bit(1);
 

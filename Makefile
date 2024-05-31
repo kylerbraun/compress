@@ -28,6 +28,9 @@ print_counts_.incl.pl1: print_counts_
 count_bytes_.incl.pl1: count_bytes_
 	depd count_bytes_ ;| count_bytes_.incl.pl1 -truncate
 
+make_example_code_.incl.pl1: make_example_code_
+	depd make_example_code_ ;| make_example_code_.incl.pl1 -truncate
+
 print_code_.incl.pl1: print_code_
 	depd print_code_ ;| print_code_.incl.pl1 -truncate
 
@@ -55,6 +58,10 @@ call_print_counts_: call_print_counts_.pl1 print_counts_.incl.pl1
 call_count_bytes_: call_count_bytes_.pl1 count_bytes_.incl.pl1 \
 		   print_counts_.incl.pl1
 	$(PL1) $(PL1FLAGS) call_count_bytes_
+
+call_print_code_: call_print_code_.pl1 make_example_code_.incl.pl1 \
+		  print_code_.incl.pl1
+	$(PL1) $(PL1FLAGS) call_print_code_
 
 call_make_code_: call_make_code_.pl1 external.incl.pl1 make_code_.incl.pl1 \
 		 print_code_.incl.pl1
