@@ -1,8 +1,8 @@
 call_read_header_: procedure(full);
 
-declare full bit(1);
+%include print_header_;
 
-declare print_header_ entry(bit(*), bit);
+declare full bit(1);
 
 declare example_header$ bit(512*9 + 512*4 + 4) external static;
 

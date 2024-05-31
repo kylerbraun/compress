@@ -1,9 +1,8 @@
 PL1 = pl1
 PL1FLAGS = -prefix "size,strg,strz,subrg"
 
-OBJECTS = count_bytes_ print_header_ print_code_ make_code_ write_header_ \
-	  encode_ compress_ read_header_ decode_ decompress_ write_into_ \
-	  compress
+OBJECTS = count_bytes_ print_code_ make_code_ write_header_ encode_ compress_ \
+	  read_header_ decode_ decompress_ write_into_  print_header_ compress
 
 NAMES = $(OBJECTS) uncompress print_compressed_header
 
@@ -46,6 +45,9 @@ decompress_.incl.pl1: decompress_
 write_into_.incl.pl1: write_into_
 	depd write_into_ ;| write_into_.incl.pl1 -truncate
 
+print_header_.incl.pl1: print_header_
+	depd print_header_ ;| print_header_.incl.pl1 -truncate
+
 uncompress: compress
 	add_name compress uncompress
 
@@ -73,6 +75,9 @@ call_compress_: call_compress_.pl1 compress_.incl.pl1 write_into_.incl.pl1
 call_decompress_: call_decompress_.pl1 external.incl.pl1 decompress_.incl.pl1 \
 		  write_into_.incl.pl1
 	$(PL1) $(PL1FLAGS) call_decompress_
+
+call_read_header_: call_read_header_.pl1 print_header_.incl.pl1
+	$(PL1) $(PL1FLAGS) call_read_header_
 
 .pl1:
 	$(PL1) $(PL1FLAGS) $*
