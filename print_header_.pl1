@@ -1,14 +1,11 @@
 print_header_: procedure(source, full);
 
+%include external;
+%include print_code_;
+%include read_header_;
+
 declare source bit(*);
 declare full bit;
-
-declare ioa_ entry options(variable);
-declare print_code_ entry(bit(1), dimension(0:511) fixed binary(9),
-			  dimension(0:511) bit(20) varying);
-declare read_header_ entry(bit(*), dimension(0:511) fixed binary(9),
-			   dimension(0:511) bit(20) varying, fixed binary(4))
-		     returns(fixed binary(24));
 
 declare codes(0:511) bit(20) varying;
 declare order(0:511) fixed binary(9);

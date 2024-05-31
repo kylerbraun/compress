@@ -61,6 +61,10 @@ decompress_.incl.pl1: decompress_
 write_into_.incl.pl1: write_into_
 	depd write_into_ ;| write_into_.incl.pl1 -truncate
 
+print_header_: print_header_.pl1 external.incl.pl1 print_code_.incl.pl1 \
+	       read_header_.incl.pl1
+	$(PL1) $(PL1FLAGS) print_header_
+
 print_header_.incl.pl1: print_header_
 	depd print_header_ ;| print_header_.incl.pl1 -truncate
 
