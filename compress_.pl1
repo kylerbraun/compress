@@ -5,17 +5,19 @@ compress_: procedure(source, destination, bit_count)
 %include make_code_;
 %include write_header_;
 
-declare source(*) bit(9);
+declare source pointer;
 declare destination pointer;
 declare bit_count fixed binary(24);
 
 declare codes(0:511) bit(20) varying;
 declare order(0:511) fixed binary(9);
+declare source_bytes dimension(divide(bit_count + 8, 9, 20)) bit(9)
+     based(source);
 declare used fixed binary(24);
 
-call make_code_(source, order, codes);
+call make_code_(source_bytes, order, codes);
 used = write_header_(destination, order, codes, mod(bit_count, 9));
-call encode_(source, destination, codes, used);
+call encode_(source_bytes, destination, codes, used);
 
 return(used);
 

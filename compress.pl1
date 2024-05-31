@@ -40,8 +40,6 @@ declare pathname_length fixed binary(21);
 declare pathname_pointer pointer initial(null);
 declare replace bit initial("0"b);
 declare uncompressed_entryname character(32);
-declare uncompressed_input(divide(input_segment_bitcount + 8, 9, 20)) bit(9)
-     based(input_segment_pointer);
 declare unknown character(9) static initial("(unknown)") options(constant);
 
 mode = mode_compress;
@@ -164,7 +162,7 @@ write: procedure returns(fixed binary(24));
       then output_segment_bitcount
 	     = decompress_(compressed_input, output_segment_pointer, bits_read);
       else output_segment_bitcount
-	     = compress_(uncompressed_input, output_segment_pointer,
+	     = compress_(input_segment_pointer, output_segment_pointer,
 			 input_segment_bitcount);
    return(output_segment_bitcount);
 end;

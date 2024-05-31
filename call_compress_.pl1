@@ -13,7 +13,7 @@ on compress_fatal goto finished;
 call write_into_(addr(test_fz$), write, "call_compress_", "test_fz");
 
 write: procedure returns(fixed binary(24));
-   return(compress_(c12345$, addr(test_fz$), 0));
+   return(compress_(addr(c12345$), addr(test_fz$), 15*9));
 end;
 
 finished:
