@@ -30,6 +30,13 @@ make_code_.incl.pl1: make_code_
 write_header_.incl.pl1: write_header_
 	depd write_header_ ;| write_header_.incl.pl1 -truncate
 
+encode_.incl.pl1: encode_
+	depd encode_ ;| encode_.incl.pl1 -truncate
+
+compress_: compress_.pl1 encode_.incl.pl1 make_code_.incl.pl1 \
+	   write_header_.incl.pl1
+	$(PL1) $(PL1FLAGS) compress_
+
 compress_.incl.pl1: compress_
 	depd compress_ ;| compress_.incl.pl1 -truncate
 
