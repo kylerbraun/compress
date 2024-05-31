@@ -74,6 +74,9 @@ uncompress: compress
 print_compressed_header: compress
 	add_name compress print_compressed_header
 
+print_counts_: print_counts_.pl1 external.incl.pl1
+	$(PL1) $(PL1FLAGS) print_counts_
+
 print_counts_.incl.pl1: print_counts_
 	depd print_counts_ ;| print_counts_.incl.pl1 -truncate
 

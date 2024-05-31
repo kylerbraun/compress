@@ -1,6 +1,6 @@
 print_counts_: procedure(counts);
 
-declare ioa_ entry options(variable);
+%include external;
 
 declare counts(0:511) fixed binary(35);
 
