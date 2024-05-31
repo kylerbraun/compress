@@ -42,6 +42,10 @@ write_into_.incl.pl1: write_into_
 print_header_.incl.pl1: print_header_
 	depd print_header_ ;| print_header_.incl.pl1 -truncate
 
+compress: compress.pl1 external.incl.pl1 compress_.incl.pl1 \
+	  decompress_.incl.pl1 print_header_.incl.pl1 write_into_.incl.pl1
+	$(PL1) $(PL1FLAGS) compress
+
 uncompress: compress
 	add_name compress uncompress
 

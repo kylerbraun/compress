@@ -1,2 +1,17 @@
 com_err_
+command_query_$yes_no
+cu_$arg_ptr
+cu_$get_command_name
+error_table_$badopt
+error_table_$namedup
+error_table_$noarg
+error_table_$segknown
+expand_pathname_
+expand_pathname_$add_suffix
+get_wdir_
+hcs_$initiate_count
+hcs_$make_seg
+hcs_$terminate_noname
+hcs_$terminate_seg
 ioa_
+suffixed_name_$new_suffix

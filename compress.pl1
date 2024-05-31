@@ -1,37 +1,10 @@
 compress: procedure options(main);
 
-declare com_err_ entry options(variable);
-declare command_query_$yes_no entry options(variable);
-declare compress_ entry(dimension(*) bit(9), bit(*), fixed binary(24))
-		    returns(fixed binary(24));
-declare cu_$arg_ptr
-     entry(fixed binary, pointer, fixed binary(21), fixed binary(35));
-declare cu_$get_command_name entry(pointer, fixed binary(21), fixed binary(35));
-declare (error_table_$badopt,
-	 error_table_$namedup,
-	 error_table_$noarg,
-	 error_table_$segknown) fixed binary(35) external;
-declare decompress_ entry(bit(*), dimension(*) bit(9), fixed binary(24))
-		      returns(fixed bin(24));
-declare expand_pathname_
-     entry(character(*), character(*), character(*), fixed binary(35));
-declare expand_pathname_$add_suffix
-     entry(character(*), character(*), character(*), character(*),
-	   fixed binary(35));
-declare get_wdir_ entry returns(character(168));
-declare hcs_$initiate_count
-     entry(character(*), character(*), character(*), fixed binary(24),
-	   fixed binary(2), pointer, fixed binary(35));
-declare hcs_$make_seg entry(character(*), character(*), character(*),
-			    fixed binary(5), pointer, fixed binary(35));
-declare hcs_$terminate_noname entry(pointer, fixed binary(35));
-declare hcs_$terminate_seg entry(pointer, fixed binary(1), fixed binary(35));
-declare ioa_ entry options(variable);
-declare print_header_ entry(bit(*), bit);
-declare suffixed_name_$new_suffix
-     entry(character(*), character(*), character(*), character(32),
-	   fixed binary(35));
-declare write_into_ entry(pointer, entry, character(*), character(*));
+%include external;
+%include compress_;
+%include decompress_;
+%include print_header_;
+%include write_into_;
 
 declare argument character(argument_length) based(argument_pointer);
 declare argument_length fixed binary(21);
