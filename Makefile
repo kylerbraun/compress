@@ -27,6 +27,9 @@ print_counts_.incl.pl1: print_counts_
 count_bytes_.incl.pl1: count_bytes_
 	depd count_bytes_ ;| count_bytes_.incl.pl1 -truncate
 
+compress_.incl.pl1: compress_
+	depd compress_ ;| compress_.incl.pl1 -truncate
+
 decompress_.incl.pl1: decompress_
 	depd decompress_ ;| decompress_.incl.pl1 -truncate
 
@@ -45,6 +48,9 @@ call_print_counts_: call_print_counts_.pl1 print_counts_.incl.pl1
 call_count_bytes_: call_count_bytes_.pl1 count_bytes_.incl.pl1 \
 		   print_counts_.incl.pl1
 	$(PL1) $(PL1FLAGS) call_count_bytes_
+
+call_compress_: call_compress_.pl1 compress_.incl.pl1 write_into_.incl.pl1
+	$(PL1) $(PL1FLAGS) call_compress_
 
 call_decompress_: call_decompress_.pl1 external.incl.pl1 decompress_.incl.pl1 \
 		  write_into_.incl.pl1
