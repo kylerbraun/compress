@@ -22,7 +22,7 @@ end;
 call write_into_(addr(test_unfz$), write, "call_decompress_", "test_unfz");
 
 write: procedure returns(fixed binary(24));
-   return(decompress_(c12345_fz$, test_unfz$, used));
+   return(decompress_(c12345_fz$, addr(test_unfz$), used));
 end;
 
 finished:

@@ -43,7 +43,6 @@ declare replace bit initial("0"b);
 declare uncompressed_entryname character(32);
 declare uncompressed_input(divide(input_segment_bitcount + 8, 9, 20)) bit(9)
      based(input_segment_pointer);
-declare uncompressed_output(255*1024*4) bit(9) based(output_segment_pointer);
 declare unknown character(9) static initial("(unknown)") options(constant);
 
 mode = mode_compress;
@@ -164,7 +163,7 @@ write: procedure returns(fixed binary(24));
       then signal error;
    if mode = mode_decompress
       then output_segment_bitcount
-	     = decompress_(compressed_input, uncompressed_output, bits_read);
+	     = decompress_(compressed_input, output_segment_pointer, bits_read);
       else output_segment_bitcount
 	     = compress_(uncompressed_input, compressed_output,
 			 input_segment_bitcount);

@@ -1,7 +1,8 @@
-decode_: procedure(source, bytes, order, codes, used) returns(fixed binary(20));
+decode_: procedure(source, destination, order, codes, used)
+	   returns(fixed binary(20));
 
 declare source bit(*);
-declare bytes(*) bit(9);
+declare destination pointer;
 declare order(0:511) fixed binary(9);
 declare codes(0:511) bit(20) varying;
 declare used fixed binary(24);
@@ -11,6 +12,7 @@ declare 01 node based,
 	   02 value bit(9) aligned,
 	   02 children(0:1) pointer aligned;
 
+declare bytes(255*1024*4) bit(9) based(destination);
 declare child_index fixed binary(1);
 declare cleanup condition;
 declare compress_bad_code condition;

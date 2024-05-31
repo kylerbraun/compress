@@ -5,7 +5,7 @@ decompress_: procedure(source, destination, used)
 %include read_header_;
 
 declare source bit(*);
-declare destination(*) bit(9);
+declare destination pointer;
 declare used fixed binary(24);
 
 declare codes(0:511) bit(20) varying;
