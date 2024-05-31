@@ -19,13 +19,20 @@ check: build_tests
 build_tests: $(TEST_OBJECTS)
 
 external.incl.pl1: external.depd
-	depd ([contents external.depd]) ;| external.incl.pl1 -truncate
+	delete -brief external.incl.pl1
+	depd ([contents external.depd]) ;| external.incl.pl1
 
 print_counts_.incl.pl1: print_counts_
 	depd print_counts_ ;| print_counts_.incl.pl1 -truncate
 
 count_bytes_.incl.pl1: count_bytes_
 	depd count_bytes_ ;| count_bytes_.incl.pl1 -truncate
+
+print_code_.incl.pl1: print_code_
+	depd print_code_ ;| print_code_.incl.pl1 -truncate
+
+make_code_.incl.pl1: make_code_
+	depd make_code_ ;| make_code_.incl.pl1 -truncate
 
 compress_.incl.pl1: compress_
 	depd compress_ ;| compress_.incl.pl1 -truncate
@@ -48,6 +55,10 @@ call_print_counts_: call_print_counts_.pl1 print_counts_.incl.pl1
 call_count_bytes_: call_count_bytes_.pl1 count_bytes_.incl.pl1 \
 		   print_counts_.incl.pl1
 	$(PL1) $(PL1FLAGS) call_count_bytes_
+
+call_make_code_: call_make_code_.pl1 external.incl.pl1 make_code_.incl.pl1 \
+		 print_code_.incl.pl1
+	$(PL1) $(PL1FLAGS) call_make_code_
 
 call_compress_: call_compress_.pl1 compress_.incl.pl1 write_into_.incl.pl1
 	$(PL1) $(PL1FLAGS) call_compress_

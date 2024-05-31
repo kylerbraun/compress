@@ -1,12 +1,8 @@
 call_make_code_: procedure(full);
 
-declare ioa_ entry options(variable);
-declare make_code_ entry(dimension(*) bit(9),
-			 dimension(0:511) fixed binary(9),
-			 dimension(0:511) bit(20) varying);
-declare print_code_ entry(bit(1),
-			  dimension(0:511) fixed binary(9),
-			  dimension(0:511) bit(20) varying);
+%include external;
+%include make_code_;
+%include print_code_;
 
 declare c12345$(15) bit(9) external static;
 
