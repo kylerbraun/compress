@@ -127,3 +127,4 @@ call_compress_: call_compress_.pl1 compress_.incl.pl1 write_into_.incl.pl1
 clean:
 	delete -brief $(OBJECTS)
 	delete -brief $(TEST_OBJECTS)
+	delete -brief *.incl.pl1
