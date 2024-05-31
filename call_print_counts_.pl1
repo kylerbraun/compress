@@ -1,6 +1,6 @@
 call_print_counts_: procedure;
 
-declare print_counts_ entry(dimension(0:511) fixed binary(35));
+%include print_counts_;
 
 declare counts(0:511) fixed binary(35) initial((512) 0);
 

@@ -7,18 +7,28 @@ OBJECTS = count_bytes_ print_header_ print_code_ make_code_ write_header_ \
 
 NAMES = $(OBJECTS) uncompress print_compressed_header
 
-TEST_OBJECTS = call_print_counts_ call_count_bytes_ make_example_code_ call_print_code_ call_make_code_ call_write_header_ call_compress_ call_read_header_ call_decompress_
+TEST_OBJECTS = call_print_counts_ call_count_bytes_ make_example_code_ \
+	       call_print_code_ call_make_code_ call_write_header_ \
+	       call_compress_ call_read_header_ call_decompress_
 
 all: $(NAMES)
 
-check: $(TEST_OBJECTS)
+check: build_tests
 	ec do_tests
+
+build_tests: $(TEST_OBJECTS)
 
 uncompress: compress
 	add_name compress uncompress
 
 print_compressed_header: compress
 	add_name compress print_compressed_header
+
+call_print_counts_: call_print_counts_.pl1 print_counts_.incl.pl1
+	$(PL1) $(PL1FLAGS) call_print_counts_
+
+print_counts_.incl.pl1: print_counts_
+	display_entry_point_dcl print_counts_ ;| print_counts_.incl.pl1
 
 .pl1:
 	$(PL1) $(PL1FLAGS) $*
