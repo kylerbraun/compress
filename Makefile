@@ -24,6 +24,9 @@ count_bytes_.incl.pl1: count_bytes_
 print_code_.incl.pl1: print_code_
 	depd print_code_ ;| print_code_.incl.pl1 -truncate
 
+make_code_: make_code_.pl1 external.incl.pl1 count_bytes_.incl.pl1
+	$(PL1) $(PL1FLAGS) make_code_
+
 make_code_.incl.pl1: make_code_
 	depd make_code_ ;| make_code_.incl.pl1 -truncate
 
@@ -39,6 +42,15 @@ compress_: compress_.pl1 encode_.incl.pl1 make_code_.incl.pl1 \
 
 compress_.incl.pl1: compress_
 	depd compress_ ;| compress_.incl.pl1 -truncate
+
+read_header_.incl.pl1: read_header_
+	depd read_header_ ;| read_header_.incl.pl1 -truncate
+
+decode_.incl.pl1: decode_
+	depd decode_ ;| decode_.incl.pl1 -truncate
+
+decompress_: decompress_.pl1 decode_.incl.pl1 read_header_.incl.pl1
+	$(PL1) $(PL1FLAGS) decompress_
 
 decompress_.incl.pl1: decompress_
 	depd decompress_ ;| decompress_.incl.pl1 -truncate

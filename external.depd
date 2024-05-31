@@ -14,4 +14,5 @@ hcs_$make_seg
 hcs_$terminate_noname
 hcs_$terminate_seg
 ioa_
+sort_items_$fixed_bin
 suffixed_name_$new_suffix

@@ -1,9 +1,8 @@
 make_code_: procedure(bytes, order, codes);
 
-declare count_bytes_
-     entry(dimension(*) bit(9)) returns(dimension(0:511) fixed binary(35));
+%include external;
+%include count_bytes_;
 declare length builtin;
-declare sort_items_$fixed_bin entry(pointer);
 
 declare bytes(*) bit(9);
 declare order(0:511) fixed binary(9);
