@@ -6,33 +6,81 @@ declare order(0:511) fixed binary(9);
 declare codes(0:511) bit(20) varying;
 declare used fixed binary(24);
 
+declare 01 node based,
+	   02 has_value bit aligned,
+	   02 value bit(9) aligned,
+	   02 children(0:1) pointer aligned;
+
+declare child_index fixed binary(1);
+declare cleanup condition;
 declare compress_bad_code condition;
 declare datum bit(9);
+declare error condition;
 declare i fixed binary(10);
-declare next_code bit(20) varying initial(""b);
+declare j fixed binary(24);
+declare null builtin;
+declare pnode pointer based(ppnode);
+declare pnode_ro pointer;
+declare ppnode pointer;
+declare subcode bit(20) varying;
+declare tree pointer initial(null);
 declare written fixed binary(20) initial(0);
 
-do used = used to length(source) - 1;
-   next_code = next_code || substr(source, used + 1, 1);
-   do i = lbound(order, 1) to hbound(order, 1)
-	while(length(codes(order(i))) > 0);
-      if length(next_code) = length(codes(order(i)))
-	    & next_code = codes(order(i)) then do;
-         datum = convert(datum, order(i));
-	 written = written + 1;
-	 bytes(written) = datum;
-	 next_code = ""b;
-	 goto next_bit;
-      end;
-   end;
-   if length(next_code) = 20 then do;
-      used = used - 20;
-      signal condition(compress_bad_code);
-      return(written);
-   end;
-next_bit:
+on cleanup begin;
+   call free_tree(tree);
 end;
 
+do i = lbound(order, 1) to hbound(order, 1)
+     while(length(codes(order(i))) > 0);
+   subcode = codes(order(i));
+   do ppnode = addr(tree) repeat addr(pnode->children(child_index))
+        while(length(subcode) > 0);
+      if pnode = null then do;
+	 allocate node set(pnode);
+	 pnode->has_value = "0"b;
+	 pnode->children = null;
+      end;
+      child_index = convert(child_index, substr(subcode, 1, 1));
+      subcode = substr(subcode, 2);
+   end;
+   if pnode ^= null
+      then signal error;
+   allocate node set(pnode);
+   pnode->has_value = "1"b;
+   pnode->value = convert(pnode->value, order(i));
+end;
+
+pnode_ro = tree;
+do j = used + 1 to length(source);
+   child_index = convert(child_index, substr(source, j, 1));
+   pnode_ro = pnode_ro->children(child_index);
+   if pnode_ro = null then do;
+      signal condition(compress_bad_code);
+      goto finish;
+   end;
+   if pnode_ro->has_value then do;
+      written = written + 1;
+      bytes(written) = pnode_ro->value;
+      pnode_ro = tree;
+      used = j;
+   end;
+end;
+
+finish:
+call free_tree(tree);
 return(written);
+
+free_tree: procedure(tree) recursive;
+   declare tree pointer;
+   declare i fixed binary(2);
+   if tree = null
+      then return;
+   if ^tree->has_value then do;
+      do i = lbound(tree->children, 1) to hbound(tree->children, 1);
+         call free_tree(tree->children(i));
+      end;
+   end;
+   free tree->node;
+end;
 
 end decode_;
