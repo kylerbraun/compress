@@ -9,10 +9,10 @@ TEST_OBJECTS = print_counts_ call_print_counts_ call_count_bytes_ make_example_c
 
 all: $(NAMES)
 
-check: build_tests $(TEST_OBJECTS)
+check: $(TEST_OBJECTS)
 	ec do_tests
 
-build_tests: $(TEST_OBJECTS)
+tests: $(TEST_OBJECTS)
 
 external.incl.pl1: external.depd
 	delete -brief external.incl.pl1
