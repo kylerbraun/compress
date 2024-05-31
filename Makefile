@@ -19,16 +19,19 @@ check: build_tests
 build_tests: $(TEST_OBJECTS)
 
 external.incl.pl1: external.depd
-	display_entry_point_dcl ([contents external.depd]) ;| external.incl.pl1
+	depd ([contents external.depd]) ;| external.incl.pl1 -truncate
 
 print_counts_.incl.pl1: print_counts_
-	display_entry_point_dcl print_counts_ ;| print_counts_.incl.pl1
+	depd print_counts_ ;| print_counts_.incl.pl1 -truncate
+
+count_bytes_.incl.pl1: count_bytes_
+	depd count_bytes_ ;| count_bytes_.incl.pl1 -truncate
 
 decompress_.incl.pl1: decompress_
-	display_entry_point_dcl decompress_ ;| decompress_.incl.pl1
+	depd decompress_ ;| decompress_.incl.pl1 -truncate
 
 write_into_.incl.pl1: write_into_
-	display_entry_point_dcl write_into_ ;| write_into_.incl.pl1
+	depd write_into_ ;| write_into_.incl.pl1 -truncate
 
 uncompress: compress
 	add_name compress uncompress
@@ -38,6 +41,10 @@ print_compressed_header: compress
 
 call_print_counts_: call_print_counts_.pl1 print_counts_.incl.pl1
 	$(PL1) $(PL1FLAGS) call_print_counts_
+
+call_count_bytes_: call_count_bytes_.pl1 count_bytes_.incl.pl1 \
+		   print_counts_.incl.pl1
+	$(PL1) $(PL1FLAGS) call_count_bytes_
 
 call_decompress_: call_decompress_.pl1 external.incl.pl1 decompress_.incl.pl1 \
 		  write_into_.incl.pl1
