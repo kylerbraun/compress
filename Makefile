@@ -58,6 +58,9 @@ decompress_: decompress_.pl1 decode_.incl.pl1 read_header_.incl.pl1
 decompress_.incl.pl1: decompress_
 	depd decompress_ ;| decompress_.incl.pl1 -truncate
 
+write_into_: write_into_.pl1 external.incl.pl1
+	$(PL1) $(PL1FLAGS) write_into_
+
 write_into_.incl.pl1: write_into_
 	depd write_into_ ;| write_into_.incl.pl1 -truncate
 

@@ -11,8 +11,10 @@ expand_pathname_$add_suffix
 get_wdir_
 hcs_$initiate_count
 hcs_$make_seg
+hcs_$set_bc_seg
 hcs_$terminate_noname
 hcs_$terminate_seg
+hcs_$truncate_seg
 ioa_
 sort_items_$fixed_bin
 suffixed_name_$new_suffix
