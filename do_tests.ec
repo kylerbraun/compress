@@ -71,6 +71,25 @@ ec test decompress_
    ec expect ||[contents c12345 -nl] ||[contents test_unfz -nl]
 -TEST_END
 
+ec fixture_push
+
+ec fixture teardown
+   set_user_storage -system
+   delete ([files &!.area &!.area_status])
+-TEST_END
+
+ec test decompress_noleaks
+   truncate test_unfz
+   create_area &!.area -zero_on_free ;| discard_
+   area_status &!.area ;| &!.area_status
+   set_user_storage &!.area
+   call_decompress_
+   set_user_storage -system
+   ec expect ||[contents &!.area_status -nl] ||[area_status &!.area ;||]""
+-TEST_END
+
+ec fixture_pop
+
 ec test nullary
    ec check_error compress [fl "compress: Expected argument missing.
 				&+ Usage: compress path {-control_args}^/"]
