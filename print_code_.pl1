@@ -1,6 +1,6 @@
 print_code_: procedure(full, order, codes);
 
-declare ioa_ entry options(variable);
+%include external;
 
 declare full bit(1);
 declare order(0:511) fixed binary(9);

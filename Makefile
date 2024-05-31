@@ -21,6 +21,9 @@ external.incl.pl1: external.depd
 count_bytes_.incl.pl1: count_bytes_
 	depd count_bytes_ ;| count_bytes_.incl.pl1 -truncate
 
+print_code_: print_code_.pl1 external.incl.pl1
+	$(PL1) $(PL1FLAGS) print_code_
+
 print_code_.incl.pl1: print_code_
 	depd print_code_ ;| print_code_.incl.pl1 -truncate
 
