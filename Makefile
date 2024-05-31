@@ -9,7 +9,7 @@ TEST_OBJECTS = print_counts_ call_print_counts_ call_count_bytes_ make_example_c
 
 all: $(NAMES)
 
-check: build_tests
+check: build_tests $(TEST_OBJECTS)
 	ec do_tests
 
 build_tests: $(TEST_OBJECTS)

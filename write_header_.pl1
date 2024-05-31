@@ -1,11 +1,12 @@
-write_header_: procedure(bits, order, codes, padding_size)
+write_header_: procedure(destination, order, codes, padding_size)
     returns(fixed binary(24));
 
-declare bits bit(*);
+declare destination pointer;
 declare order(0:511) fixed binary(9);
 declare codes(0:511) bit(20) varying;
 declare padding_size fixed binary(4);
 
+declare bits bit(255*1024*36) based(destination);
 declare i fixed binary(10);
 declare used fixed binary(24) initial(0);
 

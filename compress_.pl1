@@ -6,7 +6,7 @@ compress_: procedure(source, destination, bit_count)
 %include write_header_;
 
 declare source(*) bit(9);
-declare destination bit(*);
+declare destination pointer;
 declare bit_count fixed binary(24);
 
 declare codes(0:511) bit(20) varying;

@@ -20,7 +20,6 @@ declare compress_fatal condition;
 declare compressed_entryname character(32);
 declare compressed_input bit(input_segment_bitcount)
      based(input_segment_pointer);
-declare compressed_output bit(255*1024*36) based(output_segment_pointer);
 declare delete_$path entry(character(*), character(*), bit(36) aligned,
 			   character(*), fixed binary(35));
 declare error condition;
@@ -165,7 +164,7 @@ write: procedure returns(fixed binary(24));
       then output_segment_bitcount
 	     = decompress_(compressed_input, output_segment_pointer, bits_read);
       else output_segment_bitcount
-	     = compress_(uncompressed_input, compressed_output,
+	     = compress_(uncompressed_input, output_segment_pointer,
 			 input_segment_bitcount);
    return(output_segment_bitcount);
 end;
