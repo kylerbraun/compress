@@ -2,18 +2,18 @@
 &trace &command off
 &set prefix &[value_get test_prefix]
 &if &[not [equal ||[call match_star_name_ &r1 ||[value_get &(prefix).match]
-&+					  -out -code -ret]
-&+		 ""]] &then &do
+&+                                        -out -code -ret]
+&+               ""]] &then &do
    io move_attach user_output &!.save_output
    io attach user_output discard_
    io open user_output stream_output
    &label discard_loop
       &set line &||[io get_line user_input -allow_newline]
       &if &[equal &(line) "-TEST_END&NL"] &then &do
-	 io (close detach) user_output
-	 io move_attach &!.save_output user_output
-	 io destroy_iocb &!.save_output
-	 &quit
+         io (close detach) user_output
+         io move_attach &!.save_output user_output
+         io destroy_iocb &!.save_output
+         &quit
       &end
    &goto discard_loop
 &end
@@ -25,25 +25,25 @@ io put_chars &!.ec [fl "&&version 2^/&&trace &&command off^/
 &+ &&on cleanup &&begin^/
 &+^a&&end^/
 &+^a^a^a"
-&+		       ||[value_get &(prefix).teardown -default ""]
-&+		       ||[value_get &(prefix).setup -default ""]
-&+		       [ec get_block]
-&+		       ||[value_get &(prefix).teardown -default ""]]
+&+                     ||[value_get &(prefix).teardown -default ""]
+&+                     ||[value_get &(prefix).setup -default ""]
+&+                     [ec get_block]
+&+                     ||[value_get &(prefix).teardown -default ""]]
 
 io (close detach destroy_iocb) &!.ec
-&set failed false
+value_set -perprocess &(prefix).failed false
 &on test_fail &begin
    &goto inc_run
 &end
 &on any_other &begin
-   &if &[not &(failed)]
+   &if &[not [value_get &(prefix).failed]]
       &then &print FAIL
-   &set failed true
+   value_set -perprocess &(prefix).failed true
    &if &[not [equal &condition_name command_error]]
       &then &exit &continue
 &end
 &on program_interrupt &begin
-   &set failed true
+   value_set -perprocess &(prefix).failed true
    &goto continue
 &end
 &on cleanup &begin
@@ -51,7 +51,7 @@ io (close detach destroy_iocb) &!.ec
 &end
 ec &!
 &revert any_other
-&if &(failed)
+&if &[value_get &(prefix).failed]
    &then &goto inc_run
 &print PASS
 value_set &(prefix).passed -add 1
