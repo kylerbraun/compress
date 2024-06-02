@@ -139,6 +139,7 @@ ec fixture_push
 
 ec fixture teardown
    delete ([files &! &!.fz])
+   unlink ([links &! &!.fz])
 -TEST_END
 
 ec fixture_push
@@ -252,15 +253,63 @@ ec test no_modify_permission
 ec fixture_pop
 
 ec test compress_hello
-   copy hello &!
+   link hello &!
    compress -brief &!
    ec expect ||[contents hello.fz -nl] ||[contents &!.fz -nl]
 -TEST_END
 
 ec test uncompress_hello
-   copy hello.fz &!.fz
+   link hello.fz &!.fz
    uncompress -brief &!
    ec expect ||[contents hello -nl] ||[contents &! -nl]
+-TEST_END
+
+ec test compress_value_set_info
+   link >doc>info>value_set.info &!
+   compress -brief &!
+   ec expect true [compare value_set.info.fz &!.fz]
+-TEST_END
+
+ec test uncompress_value_set_info
+   link value_set.info.fz &!.fz
+   uncompress -brief &!
+   ec expect true [compare >doc>info>value_set.info &!]
+-TEST_END
+
+ec test compress_value_info
+   link >doc>info>value_.info &!
+   compress -brief &!
+   ec expect true [compare value_.info.fz &!.fz]
+-TEST_END
+
+ec test uncompress_value_info
+   link value_.info.fz &!.fz
+   uncompress -brief &!
+   ec expect true [compare >doc>info>value_.info &!]
+-TEST_END
+
+ec test compress_edm
+   link >sss>edm &!
+   compress -brief &!
+   ec expect true [compare edm.fz &!.fz]
+-TEST_END
+
+ec test uncompress_edm
+   link edm.fz &!.fz
+   uncompress -brief &!
+   ec expect true [compare >sss>edm &!]
+-TEST_END
+
+ec test compress_hcs_info
+   link >doc>info>hcs_.info &!
+   compress -brief &!
+   ec expect true [compare hcs_.info.fz &!.fz]
+-TEST_END
+
+ec test uncompress_hcs_info
+   link hcs_.info.fz &!.fz
+   uncompress -brief &!
+   ec expect true [compare >doc>info>hcs_.info &!]
 -TEST_END
 
 ec fixture_pop
