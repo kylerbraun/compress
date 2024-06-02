@@ -330,6 +330,12 @@ ec test uncompress_invalid_code_mb
 &+    		  [fl "uncompress: Bad code at index 86837.^/"]
 -TEST_END
 
+ec test uncompress_invalid_code_long
+   cp bad_code_long.fz &!.fz
+   ec check_error "uncompress -brief &!"
+&+    		  [fl "uncompress: Bad code at index 188.^/"]
+-TEST_END
+
 ec fixture_pop
 
 &set n &[value_get &!.passed]

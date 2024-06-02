@@ -115,13 +115,12 @@ do j = j + 1 to partial_index - 1;
      code_index = calculate_next_index(input(j));
   end;
 end;
-if mod(source_bitcount, 9) ^= 0 then do;
-   call decode_bit_string(substr(input(partial_index), 1,
-                                 mod(source_bitcount, 9)));
-   if left ^= 0 then do;
-      used = source_bitcount - prefix_length;
-      signal compress_bad_code;
-   end;
+if mod(source_bitcount, 9) ^= 0
+   then call decode_bit_string(substr(input(partial_index), 1,
+                                      mod(source_bitcount, 9)));
+if left ^= 0 then do;
+   used = source_bitcount - prefix_length;
+   signal compress_bad_code;
 end;
 
 finish:
