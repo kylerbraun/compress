@@ -1,18 +1,21 @@
-decompress_: procedure(source, destination, used)
+decompress_: procedure(source, source_bitcount, destination, used)
 	       returns(fixed binary(24));
 
 %include decode_;
 %include read_header_;
 
-declare source bit(*);
+declare source pointer;
+declare source_bitcount fixed binary(24);
 declare destination pointer;
 declare used fixed binary(24);
 
+declare bits bit(source_bitcount) based(source);
 declare codes(0:511) bit(20) varying;
 declare order(0:511) fixed binary(9);
 declare padding_size fixed binary(4);
 
-used = read_header_(source, order, codes, padding_size);
-return(decode_(source, destination, order, codes, used)*9 - padding_size);
+used = read_header_(bits, order, codes, padding_size);
+return(decode_(source, source_bitcount, destination, order, codes, used)*9
+       - padding_size);
 
 end decompress_;

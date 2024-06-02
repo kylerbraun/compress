@@ -160,7 +160,8 @@ write: procedure returns(fixed binary(24));
       then signal error;
    if mode = mode_decompress
       then output_segment_bitcount
-	     = decompress_(compressed_input, output_segment_pointer, bits_read);
+	     = decompress_(input_segment_pointer, input_segment_bitcount,
+                           output_segment_pointer, bits_read);
       else output_segment_bitcount
 	     = compress_(input_segment_pointer, output_segment_pointer,
 			 input_segment_bitcount);

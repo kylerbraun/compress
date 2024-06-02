@@ -1,7 +1,8 @@
-decode_: procedure(source, destination, order, codes, used)
+decode_: procedure(source, source_bitcount, destination, order, codes, used)
 	   returns(fixed binary(20));
 
-declare source bit(*);
+declare source pointer;
+declare source_bitcount fixed binary(24);
 declare destination pointer;
 declare order(0:511) fixed binary(9);
 declare codes(0:511) bit(20) varying;
@@ -12,24 +13,43 @@ declare 01 node based,
 	   02 value bit(9) aligned,
 	   02 children(0:1) pointer aligned;
 
-declare bytes(255*1024*4) bit(9) based(destination);
+declare 01 table(0:511) based aligned,
+           02 num_bytes fixed binary(6),
+           02 next_index fixed binary(5),
+           02 subtree pointer initial((512) null),
+           02 byte(9) bit(9) unaligned;
+
+declare bad_bits fixed binary(4);
 declare child_index fixed binary(1);
 declare cleanup condition;
+declare code_index fixed binary(5);
 declare compress_bad_code condition;
 declare datum bit(9);
 declare error condition;
 declare i fixed binary(10);
+declare input(divide(source_bitcount + 8, 9, 20)) bit(9) based(source);
 declare j fixed binary(24);
+declare new_index fixed binary(5);
 declare null builtin;
+declare old_written fixed binary(20);
+declare output(255*1024*4) bit(9) based(destination);
+declare partial_index fixed binary(24);
 declare pnode pointer based(ppnode);
 declare pnode_ro pointer;
 declare ppnode pointer;
+declare ptable(31) pointer initial((31) null);
+declare quit condition;
 declare subcode bit(20) varying;
+declare table_index fixed binary(9);
 declare tree pointer initial(null);
 declare written fixed binary(20) initial(0);
 
+if source_bitcount = used
+   then return(written);
+
 on cleanup begin;
    call free_tree(tree);
+   call free_tables;
 end;
 
 do i = lbound(order, 1) to hbound(order, 1)
@@ -53,28 +73,86 @@ do i = lbound(order, 1) to hbound(order, 1)
 end;
 
 pnode_ro = tree;
-do j = used + 1 to length(source);
-   child_index = convert(child_index, substr(source, j, 1));
-   pnode_ro = pnode_ro->children(child_index);
-   if pnode_ro = null then do;
-      signal condition(compress_bad_code);
-      goto finish;
-   end;
-   if pnode_ro->has_value then do;
-      written = written + 1;
-      bytes(written) = pnode_ro->value;
-      pnode_ro = tree;
-      used = j;
-   end;
+j = divide(used, 9, 24) + 1;
+partial_index = hbound(input, 1);
+if mod(source_bitcount, 9) = 0
+   then partial_index = partial_index + 1;
+code_index =
+  calculate_next_index
+     (input(j), decode_bit_string(substr(input(j), mod(used, 9) + 1)));
+do j = j + 1 to partial_index - 1;
+  if code_index > 0 then do;
+     if ptable(code_index) = null
+        then allocate table set(ptable(code_index));
+     table_index = convert(table_index, input(j));
+     if ptable(code_index)->subtree(table_index) ^= null then do;
+        do i = 1 to ptable(code_index)->num_bytes(table_index);
+           output(written + i) = ptable(code_index)->byte(table_index, i);
+        end;
+        written = written + ptable(code_index)->num_bytes(table_index);
+        pnode_ro = ptable(code_index)->subtree(table_index);
+        code_index = ptable(code_index)->next_index(table_index);
+     end;
+     else do;
+        old_written = written;
+        new_index = calculate_next_index(input(j), decode_bit_string(input(j)));
+        ptable(code_index)->num_bytes(table_index) = written - old_written;
+        do i = 1 to written - old_written;
+           ptable(code_index)->byte(table_index, i) = output(old_written + i);
+        end;
+        ptable(code_index)->next_index(table_index) = new_index;
+        ptable(code_index)->subtree(table_index) = pnode_ro;
+        code_index = new_index;
+     end;
+  end;
+  else code_index = calculate_next_index(input(j), decode_bit_string(input(j)));
+end;
+if mod(source_bitcount, 9) ^= 0 then do;
+   bad_bits = decode_bit_string(substr(input(partial_index), 1,
+                                       mod(source_bitcount, 9)));
+   if bad_bits ^= 0
+      then signal compress_bad_code;
 end;
 
 finish:
 call free_tree(tree);
+call free_tables;
 return(written);
+
+calculate_next_index: procedure(byte, prefix_length) returns(fixed binary(5));
+   declare byte bit(9);
+   declare prefix_length fixed binary(4);
+   declare result fixed binary(5);
+   if prefix_length > 4
+      then return(0);
+   result =
+     convert(result, "1"b || substr(byte, 10 - prefix_length, prefix_length));
+   return(result);
+end;
+
+decode_bit_string: procedure(bits) returns(fixed binary(4));
+   declare bits bit(*);
+   declare child_index fixed binary(1);
+   declare i fixed binary(24);
+   declare this_used fixed binary(24) initial(0);
+   do i = 1 to length(bits);
+      child_index = convert(child_index, substr(bits, i, 1));
+      pnode_ro = pnode_ro->children(child_index);
+      if pnode_ro->has_value then do;
+         written = written + 1;
+         output(written) = pnode_ro->value;
+         pnode_ro = tree;
+         this_used = i;
+      end;
+   end;
+   used = used + this_used;
+   return(length(bits) - this_used);
+end;
 
 free_tree: procedure(tree) recursive;
    declare tree pointer;
    declare i fixed binary(2);
+   declare garbage pointer;
    if tree = null
       then return;
    if ^tree->has_value then do;
@@ -82,7 +160,39 @@ free_tree: procedure(tree) recursive;
          call free_tree(tree->children(i));
       end;
    end;
-   free tree->node;
+   garbage = tree;
+   call noquit(operation);
+ operation: procedure;
+     tree = null;
+     free garbage->node;
+   end;
+end;
+
+free_tables: procedure;
+   declare garbage pointer;
+   declare i fixed binary(6);
+   do i = lbound(ptable, 1) to hbound(ptable, 1);
+      if ptable(i) ^= null then do;
+         garbage = ptable(i);
+         call noquit(operation);
+      end;
+   end;
+operation: procedure;
+      ptable(i) = null;
+      free garbage->table;
+   end;
+end;
+
+noquit: procedure(operation);
+   declare operation entry;
+   declare quit_pending bit initial("0"b);
+   on quit begin;
+      quit_pending = "1"b;
+   end;
+   call operation;
+   revert quit;
+   if quit_pending
+      then signal quit;
 end;
 
 end decode_;
