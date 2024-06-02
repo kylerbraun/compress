@@ -92,47 +92,47 @@ ec fixture_pop
 
 ec test nullary
    ec check_error compress [fl "compress: Expected argument missing.
-				&+ Usage: compress path {-control_args}^/"]
+                                &+ Usage: compress path {-control_args}^/"]
 -TEST_END
 
 ec test nullary_uncompress
    ec check_error uncompress [fl "uncompress: Expected argument missing.
-				  &+ Usage: uncompress path {-control_args}^/"]
+                                  &+ Usage: uncompress path {-control_args}^/"]
 -TEST_END
 
 ec test not_found
    ec check_error "compress nonexistent"
-&+		  [fl "compress: Entry not found. Could not initiate
-		       &+ input segment ^a>nonexistent.^/" [wd]]
+&+                [fl "compress: Entry not found. Could not initiate
+                       &+ input segment ^a>nonexistent.^/" [wd]]
 -TEST_END
 
 ec test not_found_uncompress
    ec check_error "uncompress nonexistent"
-&+		  [fl "uncompress: Entry not found. Could not initiate
-		       &+ input segment ^a>nonexistent.fz.^/" [wd]]
+&+                [fl "uncompress: Entry not found. Could not initiate
+                       &+ input segment ^a>nonexistent.fz.^/" [wd]]
 -TEST_END
 
 ec test bad_option
    ec check_error "compress -nonexistent"
-&+		  [fl "compress: Specified control argument is not accepted.
-		       &+ -nonexistent^/"]
+&+                [fl "compress: Specified control argument is not accepted.
+                       &+ -nonexistent^/"]
 -TEST_END
 
 ec test extra_arg
    ec check_error "compress file file2"
-&+		  [fl "compress: Usage: compress path {-control_args}^/"]
+&+                [fl "compress: Usage: compress path {-control_args}^/"]
 -TEST_END
 
 ec test too_long
    ec check_error "compress this_entryname_is_more_than_32_character_long"
-&+		  [fl "compress: Entry name too long. Could not expand input
-		       &+ pathname.^/"]
+&+                [fl "compress: Entry name too long. Could not expand input
+                       &+ pathname.^/"]
 -TEST_END
 
 ec test too_long_with_suffix
    ec check_error "compress this_names_smthg_with_30_chars"
-&+		  [fl "compress: Entry name too long. Could not expand input
-		       &+ pathname.^/"]
+&+                [fl "compress: Entry name too long. Could not expand input
+                       &+ pathname.^/"]
 -TEST_END
 
 ec fixture_push
@@ -151,15 +151,15 @@ ec fixture setup
 ec test no_input_permission
    set_acl &! n
    ec check_error "compress &!"
-&+		  [fl "compress: Incorrect access on entry. Could not initiate
-		       &+ input segment ^a>&!.^/" [wd]]
+&+                [fl "compress: Incorrect access on entry. Could not initiate
+                       &+ input segment ^a>&!.^/" [wd]]
 -TEST_END
 
 ec test no_output_permission
    set_acl &!.fz n
    ec check_error "compress &!"
-&+		  [fl "compress: Incorrect access on entry. Could not initiate
-		       &+ output segment &!.fz.^/" [wd]]
+&+                [fl "compress: Incorrect access on entry. Could not initiate
+                       &+ output segment &!.fz.^/" [wd]]
 -TEST_END
 
 ec fixture_pop
@@ -197,25 +197,25 @@ ec fixture setup
 
 ec test namedup_no
    ec expect [fl "^/compress: Name duplication. Do you want to delete the old
-		  &+ segment &!.fz?   no^/"] ||[answer no compress &! ;||]""
+                  &+ segment &!.fz?   no^/"] ||[answer no compress &! ;||]""
    ec expect text ||[contents &!.fz -nl]
 -TEST_END
 
 ec test namedup_yes
    ec expect [fl "^/compress: Name duplication. Do you want to delete the old
-		  &+ segment &!.fz?   yes^/
-		  &+Old length = 0, new length = 1.^/"]
-&+	     ||[answer yes compress &! ;||]""
+                  &+ segment &!.fz?   yes^/
+                  &+Old length = 0, new length = 1.^/"]
+&+           ||[answer yes compress &! ;||]""
    ec expect ||[contents empty.fz -nl] ||[contents &!.fz -nl]
 -TEST_END
 
 ec test no_write_permission
    set_acl &!.fz r
    ec check_error "ec expect [fl ""^/compress: Name duplication. Do you want to
-			         &+ delete the old segment &!.fz?   yes^/""]
-		   &+ ||[answer yes compress &! ;||]"""""
-&+		  [fl "compress: Incorrect access on entry. Could not truncate
-		       &+ &!.fz.^/"]
+                                 &+ delete the old segment &!.fz?   yes^/""]
+                   &+ ||[answer yes compress &! ;||]"""""
+&+                [fl "compress: Incorrect access on entry. Could not truncate
+                       &+ &!.fz.^/"]
 -TEST_END
 
 ec fixture_pop
@@ -245,8 +245,8 @@ ec test no_modify_permission
    create &!.d>&!
    set_acl &!.d sa
    ec check_error "compress -replace &!.d>&!"
-&+		  [fl "compress: Incorrect access to directory containing entry.
-		       &+ Could not delete ^a>&!.d>&!.^/" [wd]]
+&+                [fl "compress: Incorrect access to directory containing entry.
+                       &+ Could not delete ^a>&!.d>&!.^/" [wd]]
    ec expect ||[contents empty.fz -nl] ||[contents &!.fz -nl]
 -TEST_END
 
@@ -310,6 +310,12 @@ ec test uncompress_hcs_info
    link hcs_.info.fz &!.fz
    uncompress -brief &!
    ec expect true [compare >doc>info>hcs_.info &!]
+-TEST_END
+
+ec test uncompress_invalid_empty
+   create &!.fz
+   ec check_error "uncompress -brief &!"
+&+                [fl "uncompress: Header is truncated.^/"]
 -TEST_END
 
 ec fixture_pop

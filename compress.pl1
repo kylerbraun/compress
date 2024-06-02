@@ -17,6 +17,7 @@ declare command_name_length fixed binary(21);
 declare command_name_pointer pointer;
 declare compress_bad_code condition;
 declare compress_fatal condition;
+declare compress_truncated_header condition;
 declare compressed_entryname character(32);
 declare compressed_input bit(input_segment_bitcount)
      based(input_segment_pointer);
@@ -56,7 +57,12 @@ start:
 on compress_fatal goto finished;
 
 on compress_bad_code begin;
-   call com_err_(0, command_name, "bad code at index ^d", bits_read);
+   call com_err_(0, command_name, "Bad code at index ^d.", bits_read);
+   goto finished;
+end;
+
+on compress_truncated_header begin;
+   call com_err_(0, command_name, "Header is truncated.");
    goto finished;
 end;
 

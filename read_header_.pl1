@@ -9,6 +9,7 @@ declare padding_size fixed binary(4);
 declare code_count fixed binary(10);
 declare code_length fixed binary;
 declare code_value fixed binary(21);
+declare compress_truncated_header condition;
 declare i fixed binary(10);
 declare next_code bit(21) varying initial("0"b);
 declare used fixed binary(24) initial(0);
@@ -53,16 +54,18 @@ padding_size = read_fixed(4);
 
 return(used);
 
-read: procedure(length) returns(bit(*));
-   declare length fixed binary;
-   used = used + length;
-   return(substr(bits, used - length + 1, length));
+read: procedure(count) returns(bit(*));
+   declare count fixed binary;
+   used = used + count;
+   if used > length(bits)
+      then signal compress_truncated_header;
+   return(substr(bits, used - count + 1, count));
 end;
 
-read_fixed: procedure(length) returns(fixed binary(35));
-   declare length fixed binary;
+read_fixed: procedure(count) returns(fixed binary(35));
+   declare count fixed binary;
    declare result fixed binary(35);
-   result = convert(result, read(length));
+   result = convert(result, read(count));
    return(result);
 end;
 
