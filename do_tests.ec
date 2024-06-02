@@ -318,6 +318,12 @@ ec test uncompress_invalid_empty
 &+                [fl "uncompress: Header is truncated.^/"]
 -TEST_END
 
+ec test uncompress_invalid_code
+   cp bad_code.fz &!.fz
+   ec check_error "uncompress -brief &!"
+&+    		  [fl "uncompress: Bad code at index 210.^/"]
+-TEST_END
+
 ec fixture_pop
 
 &set n &[value_get &!.passed]

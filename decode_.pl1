@@ -16,10 +16,10 @@ declare 01 node based,
 declare 01 table(0:511) based aligned,
            02 num_bytes fixed binary(6),
            02 next_index fixed binary(5),
+	   02 left fixed binary(4),
            02 subtree pointer initial((512) null),
            02 byte(9) bit(9) unaligned;
 
-declare bad_bits fixed binary(4);
 declare child_index fixed binary(1);
 declare cleanup condition;
 declare code_index fixed binary(5);
@@ -29,6 +29,7 @@ declare error condition;
 declare i fixed binary(10);
 declare input(divide(source_bitcount + 8, 9, 20)) bit(9) based(source);
 declare j fixed binary(24);
+declare left fixed binary(4);
 declare new_index fixed binary(5);
 declare null builtin;
 declare old_written fixed binary(20);
@@ -37,6 +38,7 @@ declare partial_index fixed binary(24);
 declare pnode pointer based(ppnode);
 declare pnode_ro pointer;
 declare ppnode pointer;
+declare prefix_length fixed binary(24) initial(0);
 declare ptable(31) pointer initial((31) null);
 declare quit condition;
 declare subcode bit(20) varying;
@@ -77,9 +79,8 @@ j = divide(used, 9, 24) + 1;
 partial_index = hbound(input, 1);
 if mod(source_bitcount, 9) = 0
    then partial_index = partial_index + 1;
-code_index =
-  calculate_next_index
-     (input(j), decode_bit_string(substr(input(j), mod(used, 9) + 1)));
+call decode_bit_string(substr(input(j), mod(used, 9) + 1));
+code_index = calculate_next_index(input(j));
 do j = j + 1 to partial_index - 1;
   if code_index > 0 then do;
      if ptable(code_index) = null
@@ -90,28 +91,37 @@ do j = j + 1 to partial_index - 1;
            output(written + i) = ptable(code_index)->byte(table_index, i);
         end;
         written = written + ptable(code_index)->num_bytes(table_index);
+	left = ptable(code_index)->table(table_index).left;
+	call adjust_prefix_length(left = 9);
         pnode_ro = ptable(code_index)->subtree(table_index);
         code_index = ptable(code_index)->next_index(table_index);
      end;
      else do;
         old_written = written;
-        new_index = calculate_next_index(input(j), decode_bit_string(input(j)));
+	call decode_bit_string(input(j));
+        new_index = calculate_next_index(input(j));
         ptable(code_index)->num_bytes(table_index) = written - old_written;
         do i = 1 to written - old_written;
            ptable(code_index)->byte(table_index, i) = output(old_written + i);
         end;
+	ptable(code_index)->table(table_index).left = left;
         ptable(code_index)->next_index(table_index) = new_index;
         ptable(code_index)->subtree(table_index) = pnode_ro;
         code_index = new_index;
      end;
   end;
-  else code_index = calculate_next_index(input(j), decode_bit_string(input(j)));
+  else do;
+     call decode_bit_string(input(j));
+     code_index = calculate_next_index(input(j));
+  end;
 end;
 if mod(source_bitcount, 9) ^= 0 then do;
-   bad_bits = decode_bit_string(substr(input(partial_index), 1,
-                                       mod(source_bitcount, 9)));
-   if bad_bits ^= 0
-      then signal compress_bad_code;
+   call decode_bit_string(substr(input(partial_index), 1,
+                                 mod(source_bitcount, 9)));
+   if left ^= 0 then do;
+      used = source_bitcount - prefix_length;
+      signal compress_bad_code;
+   end;
 end;
 
 finish:
@@ -119,18 +129,17 @@ call free_tree(tree);
 call free_tables;
 return(written);
 
-calculate_next_index: procedure(byte, prefix_length) returns(fixed binary(5));
+calculate_next_index: procedure(byte) returns(fixed binary(5));
    declare byte bit(9);
-   declare prefix_length fixed binary(4);
    declare result fixed binary(5);
-   if prefix_length > 4
+   if left > 4
       then return(0);
    result =
-     convert(result, "1"b || substr(byte, 10 - prefix_length, prefix_length));
+     convert(result, "1"b || substr(byte, 10 - left, left));
    return(result);
 end;
 
-decode_bit_string: procedure(bits) returns(fixed binary(4));
+decode_bit_string: procedure(bits);
    declare bits bit(*);
    declare child_index fixed binary(1);
    declare i fixed binary(24);
@@ -145,8 +154,15 @@ decode_bit_string: procedure(bits) returns(fixed binary(4));
          this_used = i;
       end;
    end;
-   used = used + this_used;
-   return(length(bits) - this_used);
+   left = length(bits) - this_used;
+   call adjust_prefix_length(this_used = 0);
+end;
+
+adjust_prefix_length: procedure(any_used);
+   declare any_used bit;
+   if any_used
+      then prefix_length = prefix_length + left;
+      else prefix_length = left;
 end;
 
 free_tree: procedure(tree) recursive;
