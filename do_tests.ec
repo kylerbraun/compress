@@ -354,6 +354,12 @@ ec test uncompress_decreasing_header
 &+                [fl "uncompress: Header is invalid.^/"]
 -TEST_END
 
+ec test uncompress_underfull_header
+   cp underfull.fz &!.fz
+   ec check_error "uncompress -brief &!"
+&+                [fl "uncompress: Header is invalid.^/"]
+-TEST_END
+
 ec fixture_pop
 
 &set n &[value_get &!.passed]
