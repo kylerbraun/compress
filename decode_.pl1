@@ -16,7 +16,7 @@ declare 01 node based,
 declare 01 table(0:511) based aligned,
            02 num_bytes fixed binary(6),
            02 next_index fixed binary(5),
-	   02 left fixed binary(4),
+	   02 prefix_length fixed binary(24),
            02 subtree pointer initial((512) null),
            02 byte(9) bit(9) unaligned;
 
@@ -91,8 +91,7 @@ do j = j + 1 to partial_index - 1;
            output(written + i) = ptable(code_index)->byte(table_index, i);
         end;
         written = written + ptable(code_index)->num_bytes(table_index);
-	left = ptable(code_index)->table(table_index).left;
-	call adjust_prefix_length(left = 9);
+	prefix_length = ptable(code_index)->table(table_index).prefix_length;
         pnode_ro = ptable(code_index)->subtree(table_index);
         code_index = ptable(code_index)->next_index(table_index);
      end;
@@ -104,7 +103,7 @@ do j = j + 1 to partial_index - 1;
         do i = 1 to written - old_written;
            ptable(code_index)->byte(table_index, i) = output(old_written + i);
         end;
-	ptable(code_index)->table(table_index).left = left;
+	ptable(code_index)->table(table_index).prefix_length = prefix_length;
         ptable(code_index)->next_index(table_index) = new_index;
         ptable(code_index)->subtree(table_index) = pnode_ro;
         code_index = new_index;
@@ -118,7 +117,7 @@ end;
 if mod(source_bitcount, 9) ^= 0
    then call decode_bit_string(substr(input(partial_index), 1,
                                       mod(source_bitcount, 9)));
-if left ^= 0 then do;
+if prefix_length ^= 0 then do;
    used = source_bitcount - prefix_length;
    signal compress_bad_code;
 end;
