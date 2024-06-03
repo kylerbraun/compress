@@ -1,5 +1,6 @@
+/* -*- indent-tabs-mode: nil -*- */
 decode_: procedure(source, source_bitcount, destination, order, codes, used)
-	   returns(fixed binary(20));
+           returns(fixed binary(20));
 
 declare source pointer;
 declare source_bitcount fixed binary(24);
@@ -9,20 +10,25 @@ declare codes(0:511) bit(20) varying;
 declare used fixed binary(24);
 
 declare 01 node based,
-	   02 has_value bit aligned,
-	   02 value bit(9) aligned,
-	   02 children(0:1) pointer aligned;
+           02 has_value bit aligned,
+           02 value bit(9) aligned,
+           02 children(0:1) pointer aligned;
 
 declare 01 table(0:511) based aligned,
            02 num_bytes fixed binary(6),
            02 next_index fixed binary(5),
-	   02 prefix_length fixed binary(24),
+           02 prefix_length fixed binary(24),
            02 subtree pointer initial((512) null),
            02 byte(9) bit(9) unaligned;
 
 declare child_index fixed binary(1);
 declare cleanup condition;
 declare code_index fixed binary(5);
+declare copy_destination(copy_length) bit(9) based(copy_destination_pointer);
+declare copy_destination_pointer pointer;
+declare copy_length fixed bin;
+declare copy_source(copy_length) bit(9) based(copy_source_pointer);
+declare copy_source_pointer pointer;
 declare compress_bad_code condition;
 declare datum bit(9);
 declare error condition;
@@ -60,9 +66,9 @@ do i = lbound(order, 1) to hbound(order, 1)
    do ppnode = addr(tree) repeat addr(pnode->children(child_index))
         while(length(subcode) > 0);
       if pnode = null then do;
-	 allocate node set(pnode);
-	 pnode->has_value = "0"b;
-	 pnode->children = null;
+         allocate node set(pnode);
+         pnode->has_value = "0"b;
+         pnode->children = null;
       end;
       child_index = convert(child_index, substr(subcode, 1, 1));
       subcode = substr(subcode, 2);
@@ -87,23 +93,26 @@ do j = j + 1 to partial_index - 1;
         then allocate table set(ptable(code_index));
      table_index = convert(table_index, input(j));
      if ptable(code_index)->subtree(table_index) ^= null then do;
-        do i = 1 to ptable(code_index)->num_bytes(table_index);
-           output(written + i) = ptable(code_index)->byte(table_index, i);
+        copy_destination_pointer = addr(output(written + 1));
+        copy_source_pointer = addr(ptable(code_index)->byte(table_index, 1));
+        copy_length = ptable(code_index)->num_bytes(table_index);
+        do i = 1 to copy_length;
+           copy_destination(i) = copy_source(i);
         end;
-        written = written + ptable(code_index)->num_bytes(table_index);
-	prefix_length = ptable(code_index)->table(table_index).prefix_length;
+        written = written + copy_length;
+        prefix_length = ptable(code_index)->table(table_index).prefix_length;
         pnode_ro = ptable(code_index)->subtree(table_index);
         code_index = ptable(code_index)->next_index(table_index);
      end;
      else do;
         old_written = written;
-	call decode_bit_string(input(j));
+        call decode_bit_string(input(j));
         new_index = calculate_next_index(input(j));
         ptable(code_index)->num_bytes(table_index) = written - old_written;
         do i = 1 to written - old_written;
            ptable(code_index)->byte(table_index, i) = output(old_written + i);
         end;
-	ptable(code_index)->table(table_index).prefix_length = prefix_length;
+        ptable(code_index)->table(table_index).prefix_length = prefix_length;
         ptable(code_index)->next_index(table_index) = new_index;
         ptable(code_index)->subtree(table_index) = pnode_ro;
         code_index = new_index;
