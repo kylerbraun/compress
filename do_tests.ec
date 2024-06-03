@@ -166,7 +166,7 @@ ec fixture_pop
 
 ec test compress_empty
    create &!
-   ec expect [fl "Old length = 0, new length = 1.^/"] ||[compress &! ;||]""
+   ec expect [fl "Old length = 0, new length = 0.^/"] ||[compress &! ;||]""
    ec expect ||[contents empty.fz -nl] ||[contents &!.fz -nl]
 -TEST_END
 
@@ -178,7 +178,7 @@ ec test compress_empty_fz
 
 ec test uncompress_empty
    copy empty.fz &!.fz
-   ec expect [fl "Old length = 1, new length = 0.^/"] ||[uncompress &! ;||]""
+   ec expect [fl "Old length = 0, new length = 0.^/"] ||[uncompress &! ;||]""
    ec expect ||[contents empty -nl] ||[contents &! -nl]
 -TEST_END
 
@@ -204,7 +204,7 @@ ec test namedup_no
 ec test namedup_yes
    ec expect [fl "^/compress: Name duplication. Do you want to delete the old
                   &+ segment &!.fz?   yes^/
-                  &+Old length = 0, new length = 1.^/"]
+                  &+Old length = 0, new length = 0.^/"]
 &+           ||[answer yes compress &! ;||]""
    ec expect ||[contents empty.fz -nl] ||[contents &!.fz -nl]
 -TEST_END
@@ -312,12 +312,6 @@ ec test uncompress_hcs_info
    ec expect true [compare >doc>info>hcs_.info &!]
 -TEST_END
 
-ec test uncompress_invalid_empty
-   create &!.fz
-   ec check_error "uncompress -brief &!"
-&+                [fl "uncompress: Header is truncated.^/"]
--TEST_END
-
 ec test uncompress_invalid_code
    cp bad_code.fz &!.fz
    ec check_error "uncompress -brief &!"
@@ -334,6 +328,18 @@ ec test uncompress_invalid_code_long
    cp bad_code_long.fz &!.fz
    ec check_error "uncompress -brief &!"
 &+    		  [fl "uncompress: Bad code at index 188.^/"]
+-TEST_END
+
+ec test uncompress_truncated_header
+   cp truncated_header.fz &!.fz
+   ec check_error "uncompress -brief &!"
+&+                [fl "uncompress: Header is truncated.^/"]
+-TEST_END
+
+ec test uncompress_bad_header
+   cp bad_header.fz &!.fz
+   ec check_error "uncompress -brief &!"
+&+                [fl "uncompress: Header is invalid.^/"]
 -TEST_END
 
 ec fixture_pop

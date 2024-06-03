@@ -17,11 +17,12 @@ end;
 /* Terminate list with repeated first element, or 0-1-1 if there are no
    elements.  These terminators are recognizable because they contain repeated
    elements, which cannot occur in the payload itself. */
-if i = 0 then do;
-   call append_fixed(0, 9);
-   call append_fixed(1, 9);
-   call append_fixed(1, 9);
-end;
+/* If the input is empty, don't generate a header. */
+if i = 0
+   then return(used);
+/* Terminate list with repeated first element.  This terminator is recognizable
+   because it contains a repeated element, which cannot occur in the payload
+   itself. */
 else if i <= hbound(order, 1)
    then call append_fixed((order(0)), 9);
 

@@ -16,6 +16,7 @@ declare command_name character(command_name_length) based(command_name_pointer);
 declare command_name_length fixed binary(21);
 declare command_name_pointer pointer;
 declare compress_bad_code condition;
+declare compress_bad_header condition;
 declare compress_fatal condition;
 declare compress_truncated_header condition;
 declare compressed_entryname character(32);
@@ -63,6 +64,11 @@ end;
 
 on compress_truncated_header begin;
    call com_err_(0, command_name, "Header is truncated.");
+   goto finished;
+end;
+
+on compress_bad_header begin;
+   call com_err_(0, command_name, "Header is invalid.");
    goto finished;
 end;
 

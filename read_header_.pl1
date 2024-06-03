@@ -9,25 +9,27 @@ declare padding_size fixed binary(4);
 declare code_count fixed binary(10);
 declare code_length fixed binary;
 declare code_value fixed binary(21);
+declare compress_bad_header condition;
 declare compress_truncated_header condition;
 declare i fixed binary(10);
 declare next_code bit(21) varying initial("0"b);
+declare seen(0:511) bit initial((512) ("0"b));
 declare used fixed binary(24) initial(0);
 
 codes = ""b;
-order(0) = read_fixed(9);
+if length(bits) = 0 then do;
+   padding_size = 0;
+   return(used);
+end;
 
-do i = 1 to hbound(order, 1);
+do i = 0 to hbound(order, 1);
    order(i) = read_fixed(9);
-   /* Recognize empty list, which is indicated by a repeated second element.
-      If the list is in fact empty, set i to make it seem like we didn't read
-      any elements.  As a useful side-effect, this will cause the next statement
-      to recognize that the list terminator has been found. */
-   if i > 1 & order(i) = order(1)
-      then i = 0;
-   /* Recognize terminator, which is indicated by a repeated first element. */
-   if order(i) = order(0)
-      then goto set_count;
+   if seen(order(i)) then do;
+      if order(i) = order(0)
+         then goto set_count;
+      signal compress_bad_header;
+   end;
+   seen(order(i)) = "1"b;
 end;
 
 set_count:
@@ -35,13 +37,19 @@ code_count = i;
 
 do i = 0 to code_count - 1;
    code_length = read_fixed(5);
+   if code_length < length(next_code)
+      then signal compress_bad_header;
    next_code = next_code || copy("0"b, code_length - length(next_code));
    codes(order(i)) = next_code;
    code_value = convert(code_value, next_code);
    code_value = code_value + 1;
+   if code_value >= 2**length(next_code) & i < code_count - 1
+      then signal compress_bad_header;
    next_code = substr(convert(next_code, code_value),
 		      21 - length(next_code) + 1);
 end;
+if next_code ^= copy("0"b, length(next_code))
+   then signal compress_bad_header;
 
 do i = lbound(codes, 1) to hbound(codes, 1);
    if length(codes(i)) = 0 then do;
