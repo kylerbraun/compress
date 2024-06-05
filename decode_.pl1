@@ -39,7 +39,9 @@ declare i fixed binary(10);
 declare input(divide(source_bitcount + 8, 9, 20)) bit(9) based(source);
 declare j fixed binary(24);
 declare left fixed binary(4);
+declare max_prefix_length fixed binary(5) static initial(5) options(constant);
 declare null builtin;
+declare num_ptables fixed binary(21) static initial(63) options(constant);
 declare old_written fixed binary(20);
 declare output(255*1024*4) bit(9) based(destination);
 declare partial_index fixed binary(24);
@@ -47,8 +49,8 @@ declare pentry pointer;
 declare pnode pointer based(ppnode);
 declare pnode_ro pointer;
 declare ppnode pointer;
-declare prefix_length fixed binary(24) initial(0);
-declare ptable(31) pointer initial((31) null);
+declare prefix_length fixed binary(5) initial(0);
+declare ptable(num_ptables) pointer initial((num_ptables) null);
 declare quit condition;
 declare source pointer initial(source_arg);
 declare subcode bit(20) varying;
@@ -141,7 +143,7 @@ return(written);
 get_next_pointer: procedure(byte) returns(pointer);
    declare byte bit(9);
    declare next_index fixed binary(5);
-   if left > 4
+   if left > max_prefix_length
       then return(null);
    next_index =
      convert(next_index, "1"b || substr(byte, 10 - left, left));
