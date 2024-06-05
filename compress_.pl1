@@ -16,7 +16,7 @@ declare source_bytes dimension(divide(bit_count + 8, 9, 20)) bit(9)
 declare used fixed binary(24);
 
 call make_code_(source_bytes, order, codes);
-used = write_header_(destination, order, codes, mod(bit_count, 9));
+used = write_header_(destination, order, codes, mod(-bit_count, 9));
 call encode_(source_bytes, destination, codes, used);
 
 return(used);
