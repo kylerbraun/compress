@@ -10,40 +10,36 @@ declare order(0:511) fixed binary(9);
 declare codes(0:511) bit(20) varying;
 declare used fixed binary(24);
 
-declare 01 node based,
-           02 has_value bit aligned,
-           02 value bit(9) aligned,
-           02 children(0:1) pointer aligned;
+declare 01 node based aligned,
+           02 has_value bit,
+           02 value character,
+           02 children(0:1) pointer;
 
 declare 01 table(0:511) based aligned,
-           02 num_bytes fixed binary(6),
-           02 prefix_length fixed binary(5),
+           02 bytes character(9) varying,
            02 next_pointer pointer,
            02 subtree pointer initial((512) null),
-           02 byte(9) bit(9) unaligned;
+           02 prefix_length fixed binary(5);
 
 declare 01 entry like table based aligned;
 
+declare byte bit(9);
 declare child_index fixed binary(1);
 declare cleanup condition;
 declare code_pointer pointer;
-declare copy_destination(copy_length) bit(9) based(copy_destination_pointer);
-declare copy_destination_pointer pointer;
 declare copy_length fixed bin;
-declare copy_source(copy_length) bit(9) based(copy_source_pointer);
-declare copy_source_pointer pointer;
 declare compress_bad_code condition;
 declare destination pointer initial(destination_arg);
 declare error condition;
 declare i fixed binary(10);
-declare input(divide(source_bitcount + 8, 9, 20)) bit(9) based(source);
+declare input character(divide(source_bitcount + 8, 9, 20)) based(source);
 declare j fixed binary(24);
 declare left fixed binary(4);
 declare max_prefix_length fixed binary(5) static initial(5) options(constant);
 declare null builtin;
 declare num_ptables fixed binary(21) static initial(63) options(constant);
 declare old_written fixed binary(20);
-declare output(255*1024*4) bit(9) based(destination);
+declare output character(255*1024*4) based(destination);
 declare partial_index fixed binary(24);
 declare pentry pointer;
 declare pnode pointer based(ppnode);
@@ -83,27 +79,26 @@ do i = lbound(order, 1) to hbound(order, 1)
       then signal error;
    allocate node set(pnode);
    pnode->has_value = "1"b;
-   pnode->value = convert(pnode->value, order(i));
+   pnode->value = substr(collate9(), order(i) + 1, 1);
 end;
 
 pnode_ro = tree;
 j = divide(used, 9, 24) + 1;
-partial_index = hbound(input, 1);
+partial_index = length(input);
 if mod(source_bitcount, 9) = 0
    then partial_index = partial_index + 1;
-call decode_bit_string(substr(input(j), mod(used, 9) + 1));
-code_pointer = get_next_pointer(input(j));
+table_index = index(collate9(), substr(input, j, 1)) - 1;
+byte = convert(byte, table_index);
+call decode_bit_string(substr(byte, mod(used, 9) + 1));
+code_pointer = get_next_pointer(byte);
 do j = j + 1 to partial_index - 1;
+  table_index = index(collate9(), substr(input, j, 1)) - 1;
+  byte = convert(byte, table_index);
   if code_pointer ^= null then do;
-     table_index = convert(table_index, input(j));
      pentry = addr(code_pointer->table(table_index));
      if pentry->entry.subtree ^= null then do;
-        copy_destination_pointer = addr(output(written + 1));
-        copy_source_pointer = addr(pentry->entry.byte(1));
-        copy_length = pentry->entry.num_bytes;
-        do i = 1 to copy_length;
-           copy_destination(i) = copy_source(i);
-        end;
+        copy_length = length(pentry->entry.bytes);
+        substr(output, written + 1, copy_length) = pentry->entry.bytes;
         written = written + copy_length;
         prefix_length = pentry->entry.prefix_length;
         pnode_ro = pentry->entry.subtree;
@@ -111,25 +106,25 @@ do j = j + 1 to partial_index - 1;
      end;
      else do;
         old_written = written;
-        call decode_bit_string(input(j));
-        code_pointer = get_next_pointer(input(j));
-        pentry->entry.num_bytes = written - old_written;
-        do i = 1 to written - old_written;
-           pentry->entry.byte(i) = output(old_written + i);
-        end;
+        call decode_bit_string(byte);
+        code_pointer = get_next_pointer(byte);
+        copy_length = written - old_written;
+        pentry->entry.bytes = substr(output, old_written + 1, copy_length);
         pentry->entry.prefix_length = prefix_length;
         pentry->entry.next_pointer = code_pointer;
         pentry->entry.subtree = pnode_ro;
      end;
   end;
   else do;
-     call decode_bit_string(input(j));
-     code_pointer = get_next_pointer(input(j));
+     call decode_bit_string(byte);
+     code_pointer = get_next_pointer(byte);
   end;
 end;
-if mod(source_bitcount, 9) ^= 0
-   then call decode_bit_string(substr(input(partial_index), 1,
-                                      mod(source_bitcount, 9)));
+if mod(source_bitcount, 9) ^= 0 then do;
+   table_index = index(collate9(), substr(input, partial_index, 1));
+   byte = convert(byte, table_index);
+   call decode_bit_string(substr(byte, 1, mod(source_bitcount, 9)));
+end;
 if prefix_length ^= 0 then do;
    used = source_bitcount - prefix_length;
    signal compress_bad_code;
@@ -142,7 +137,7 @@ return(written);
 
 get_next_pointer: procedure(byte) returns(pointer);
    declare byte bit(9);
-   declare next_index fixed binary(5);
+   declare next_index fixed binary(6);
    if left > max_prefix_length
       then return(null);
    next_index =
@@ -163,7 +158,7 @@ decode_bit_string: procedure(bits);
       pnode = pnode->children(child_index);
       if pnode->has_value then do;
          written = written + 1;
-         output(written) = pnode->value;
+         substr(output, written, 1) = pnode->value;
          pnode = tree;
          this_used = i;
       end;
@@ -201,7 +196,7 @@ end;
 
 free_tables: procedure;
    declare garbage pointer;
-   declare i fixed binary(6);
+   declare i fixed binary(7);
    do i = lbound(ptable, 1) to hbound(ptable, 1);
       if ptable(i) ^= null then do;
          garbage = ptable(i);
