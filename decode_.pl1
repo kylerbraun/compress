@@ -168,9 +168,9 @@ decode_bit_string: procedure(bits);
    call adjust_prefix_length(this_used = 0);
 end;
 
-adjust_prefix_length: procedure(any_used);
-   declare any_used bit;
-   if any_used
+adjust_prefix_length: procedure(none_used);
+   declare none_used bit;
+   if none_used
       then prefix_length = prefix_length + left;
       else prefix_length = left;
 end;
