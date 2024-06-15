@@ -1,3 +1,4 @@
+# -*- tab-width: 10 -*-
 PL1 = pl1
 PL1FLAGS = -prefix "size,strg,strz,subrg"
 
@@ -91,29 +92,29 @@ call_print_counts_: call_print_counts_.pl1 print_counts_.incl.pl1
 	$(PL1) $(PL1FLAGS) call_print_counts_
 
 call_count_bytes_: call_count_bytes_.pl1 count_bytes_.incl.pl1 \
-		   print_counts_.incl.pl1
+		 print_counts_.incl.pl1
 	$(PL1) $(PL1FLAGS) call_count_bytes_
 
 make_example_code_.incl.pl1: make_example_code_
 	depd make_example_code_ ;| make_example_code_.incl.pl1 -truncate
 
 call_print_code_: call_print_code_.pl1 make_example_code_.incl.pl1 \
-		  print_code_.incl.pl1
+		print_code_.incl.pl1
 	$(PL1) $(PL1FLAGS) call_print_code_
 
 call_make_code_: call_make_code_.pl1 external.incl.pl1 make_code_.incl.pl1 \
-		 print_code_.incl.pl1
+	         print_code_.incl.pl1
 	$(PL1) $(PL1FLAGS) call_make_code_
 
 call_read_header_: call_read_header_.pl1 print_header_.incl.pl1
 	$(PL1) $(PL1FLAGS) call_read_header_
 
 call_decompress_: call_decompress_.pl1 external.incl.pl1 decompress_.incl.pl1 \
-		  write_into_.incl.pl1
+		write_into_.incl.pl1
 	$(PL1) $(PL1FLAGS) call_decompress_
 
 call_write_header_: call_write_header_.pl1 make_example_code_.incl.pl1 \
-		    write_header_.incl.pl1 write_into_.incl.pl1
+		  write_header_.incl.pl1 write_into_.incl.pl1
 	$(PL1) $(PL1FLAGS) call_write_header_
 
 call_compress_: call_compress_.pl1 compress_.incl.pl1 write_into_.incl.pl1

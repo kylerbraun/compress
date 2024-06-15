@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 print_header_: procedure(source, full);
 
 %include external;

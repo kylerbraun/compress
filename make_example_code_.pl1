@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 make_example_code_: procedure(order, codes);
 
 declare codes(0:511) bit(20) varying;

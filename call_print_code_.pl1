@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 call_print_code_: procedure(full);
 
 %include make_example_code_;

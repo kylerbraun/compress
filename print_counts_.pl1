@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 print_counts_: procedure(counts);
 
 %include external;

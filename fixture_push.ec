@@ -6,6 +6,6 @@
 &if &[not [value_defined &(prefix).p_teardown_len]]
    &then value_set -perprocess &(prefix).p_teardown_len 0
 value_set -push &(prefix).p_setup_len
-&+	  [length ||[value_get &(prefix).setup -default ""]]
+&+        [length ||[value_get &(prefix).setup -default ""]]
 value_set -push &(prefix).p_teardown_len
-&+	  [length ||[value_get &(prefix).teardown -default ""]]
+&+        [length ||[value_get &(prefix).teardown -default ""]]

@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 write_header_: procedure(destination, order, codes, padding_size)
     returns(fixed binary(24));
 

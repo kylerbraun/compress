@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 print_code_: procedure(full, order, codes);
 
 %include external;
@@ -11,11 +12,11 @@ declare i fixed binary(10);
 if full
    then do i = lbound(order, 1) to hbound(order, 1);
       call ioa_("^d: ^[^b^;^s^]", order(i), length(codes(order(i))) > 0,
-		codes(order(i)));
+                codes(order(i)));
    end;
 else
    do i = lbound(order, 1) to hbound(order, 1)
-	  while(length(codes(order(i))) > 0);
+          while(length(codes(order(i))) > 0);
       call ioa_("^d: ^b", order(i), codes(order(i)));
    end;
 

@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 count_bytes_: procedure(bytes) returns (dimension(0:511) fixed binary(35));
 
 declare bytes(*) bit(9);

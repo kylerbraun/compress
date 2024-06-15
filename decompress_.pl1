@@ -1,5 +1,6 @@
+/* -*- indent-tabs-mode: nil -*- */
 decompress_: procedure(source, source_bitcount, destination, used)
-	       returns(fixed binary(24));
+               returns(fixed binary(24));
 
 %include decode_;
 %include read_header_;

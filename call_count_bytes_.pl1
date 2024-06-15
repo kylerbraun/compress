@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 call_count_bytes_: procedure;
 
 %include count_bytes_;

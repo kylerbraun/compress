@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 call_write_header_: procedure;
 
 %include make_example_code_;
@@ -16,7 +17,7 @@ on compress_fatal goto finished;
 
 call make_example_code_(order, codes);
 call write_into_(addr(test_header$), write, "call_write_header_",
-		 "test_header");
+                 "test_header");
 
 write: procedure returns(fixed binary(24));
    return(write_header_(addr(test_header$), order, codes, 8));

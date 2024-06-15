@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 encode_: procedure(bytes, destination, codes, used);
 
 declare bytes(*) bit(9);

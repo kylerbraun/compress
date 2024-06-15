@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 read_header_: procedure(bits, order, codes, padding_size)
   returns(fixed binary(24));
 
@@ -46,7 +47,7 @@ do i = 0 to code_count - 1;
    if code_value >= 2**length(next_code) & i < code_count - 1
       then signal compress_bad_header;
    next_code = substr(convert(next_code, code_value),
-		      21 - length(next_code) + 1);
+                      21 - length(next_code) + 1);
 end;
 if next_code ^= copy("0"b, length(next_code))
    then signal compress_bad_header;

@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 make_code_: procedure(bytes, order, codes);
 
 %include external;
@@ -12,8 +13,8 @@ declare code_value fixed binary(21);
 declare count fixed binary(35) based(counts_sorted.vector(i));
 declare counts(0:511) fixed binary(35);
 declare 01 counts_sorted aligned,
-	   02 length fixed binary(18) initial(512),
-	   02 vector(0:511) pointer unaligned;
+           02 length fixed binary(18) initial(512),
+           02 vector(0:511) pointer unaligned;
 declare i fixed binary(10);
 declare j fixed binary(5);
 declare next_code bit(21) varying initial("0"b);
@@ -44,8 +45,8 @@ do i = hbound(counts_sorted.vector, 1) to lbound(counts_sorted.vector, 1) by -1
 end;
 
 do i = hbound(counts_sorted.vector, 1)
-	  by -1
-	  while(allocations_left(i) > 0);
+          by -1
+          while(allocations_left(i) > 0);
    /* The value of next_code will be extended with j zero bits before being used
       for the next allocation.  Find the value of j that minimizes
         |1/num_codes(j) - count/total|,
@@ -56,16 +57,16 @@ do i = hbound(counts_sorted.vector, 1)
    end;
    if j > 0 then do;
       /* if |count/total - 1/num_codes(j)|
-	      > |count/total - 1/num_codes(j - 1)| */
+              > |count/total - 1/num_codes(j - 1)| */
       /* Since we don't want unnecessary divisions, we convert the above
       expression into units of 1/(total*num_codes(j)) before comparing. */
       if 3*total < count*num_codes(j + 1) | num_codes(j) > allocations_left(i)
-	 then j = j - 1;
+         then j = j - 1;
    end;
    /* If there are more bytes to encode, make sure we leave some codes available
       for them. */
    if j = 0 & allocations_left(i) > 1
-	& next_code = copy("1"b, length(next_code))
+        & next_code = copy("1"b, length(next_code))
       then j = j + 1;
 
    next_code = next_code || copy("0"b, j);
@@ -77,7 +78,7 @@ do i = hbound(counts_sorted.vector, 1)
    code_value = convert(code_value, next_code);
    code_value = code_value + 1;
    next_code = substr(convert(next_code, code_value),
-		      21 - length(next_code) + 1);
+                      21 - length(next_code) + 1);
 
    total = total - count;
 end;

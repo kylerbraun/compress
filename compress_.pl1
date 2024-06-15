@@ -1,5 +1,6 @@
+/* -*- indent-tabs-mode: nil -*- */
 compress_: procedure(source, destination, bit_count)
-	     returns(fixed binary(24));
+             returns(fixed binary(24));
 
 %include encode_;
 %include make_code_;

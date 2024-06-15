@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 call_read_header_: procedure(full);
 
 %include print_header_;

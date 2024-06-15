@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 call_compress_: procedure;
 
 %include compress_;

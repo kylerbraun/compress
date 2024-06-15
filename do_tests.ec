@@ -315,19 +315,19 @@ ec test uncompress_hcs_info
 ec test uncompress_invalid_code
    cp bad_code.fz &!.fz
    ec check_error "uncompress -brief &!"
-&+    		  [fl "uncompress: Bad code at index 210.^/"]
+&+                [fl "uncompress: Bad code at index 210.^/"]
 -TEST_END
 
 ec test uncompress_invalid_code_mb
    cp bad_code_mb.fz &!.fz
    ec check_error "uncompress -brief &!"
-&+    		  [fl "uncompress: Bad code at index 86837.^/"]
+&+                [fl "uncompress: Bad code at index 86837.^/"]
 -TEST_END
 
 ec test uncompress_invalid_code_long
    cp bad_code_long.fz &!.fz
    ec check_error "uncompress -brief &!"
-&+    		  [fl "uncompress: Bad code at index 188.^/"]
+&+                [fl "uncompress: Bad code at index 188.^/"]
 -TEST_END
 
 ec test uncompress_truncated_header

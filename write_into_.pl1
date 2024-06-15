@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*- */
 write_into_: procedure(segment, write, caller, entryname);
 
 %include external;
@@ -23,7 +24,7 @@ bit_count = write();
 call hcs_$set_bc_seg(segment, bit_count, status_code);
 if status_code ^= 0 then do;
    call com_err_(status_code, caller, "could not set bit count for ^a",
-		 entryname);
+                 entryname);
    signal compress_fatal;
    return;
 end;
