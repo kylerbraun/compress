@@ -1,9 +1,12 @@
 /* -*- indent-tabs-mode: nil -*- */
 call_print_code_: procedure(full);
 
+/* This procedure calls print_code_ with the result of make_example_code_. */
+
 %include make_example_code_;
 %include print_code_;
 
+/* Indicates how many entries to print.  See print_code_ for details. */
 declare full bit(1);
 
 declare codes(0:511) bit(20) varying;

@@ -1,6 +1,9 @@
 /* -*- indent-tabs-mode: nil -*- */
 call_write_header_: procedure;
 
+/* This procedure calls write_header_ to write a header for the code generated
+   by make_example_code_ to "test_header". */
+
 %include make_example_code_;
 %include write_header_;
 %include write_into_;

@@ -1,6 +1,10 @@
 /* -*- indent-tabs-mode: nil -*- */
 call_print_counts_: procedure;
 
+/* This procedure generates a table of counts and then calls print_counts_ to
+   print them.  All of the counts are 0, except for those at indices 16-20,
+   which are 1-5 respectively. */
+
 %include print_counts_;
 
 declare counts(0:511) fixed binary(35) initial((512) 0);

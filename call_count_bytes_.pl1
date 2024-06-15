@@ -1,6 +1,9 @@
 /* -*- indent-tabs-mode: nil -*- */
 call_count_bytes_: procedure;
 
+/* This procedure calls count_bytes_ with input from "c12345" (15
+   characters). */
+
 %include count_bytes_;
 %include print_counts_;
 

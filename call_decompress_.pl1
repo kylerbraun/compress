@@ -1,6 +1,9 @@
 /* -*- indent-tabs-mode: nil -*- */
 call_decompress_: procedure;
 
+/* This procedure calls decompress_ with input from "c12345_fz" and output to
+   "test_unfz". */
+
 %include external;
 %include decompress_;
 %include write_into_;

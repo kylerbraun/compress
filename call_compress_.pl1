@@ -1,6 +1,9 @@
 /* -*- indent-tabs-mode: nil -*- */
 call_compress_: procedure;
 
+/* This procedure calls compress_ with input from "c12345" (15 characters) and
+   output to "test_fz". */
+
 %include compress_;
 %include write_into_;
 

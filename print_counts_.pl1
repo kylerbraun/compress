@@ -1,8 +1,12 @@
 /* -*- indent-tabs-mode: nil -*- */
 print_counts_: procedure(counts);
 
+/* This procedure prints the given array as a series of index: value pairs, one
+   per line. */
+
 %include external;
 
+/* The array to be printed. */
 declare counts(0:511) fixed binary(35);
 
 declare i fixed binary(10);

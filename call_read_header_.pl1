@@ -1,8 +1,12 @@
 /* -*- indent-tabs-mode: nil -*- */
 call_read_header_: procedure(full);
 
+/* This procedure calls print_header_ to read a code from example_header and
+   print the result. */
+
 %include print_header_;
 
+/* Indicates how many entries to print.  See print_code_ for details. */
 declare full bit(1);
 
 declare example_header$ bit(512*9 + 512*4 + 4) external static;
