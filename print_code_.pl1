@@ -1,10 +1,18 @@
 /* -*- indent-tabs-mode: nil -*- */
 print_code_: procedure(full, order, codes);
 
+/* This procedure prints the codes assigned to each byte in the given code. */
+
 %include external;
 
+/* Indicates whether to print entries for bytes that do not have a code.  If
+this is "1"b, bytes without a code will be listed in the output, but no code
+will be printed for them. */
 declare full bit(1);
+/* Bytes ordered by length of encoding in the code.  See make_code_ and
+   read_header_ for details. */
 declare order(0:511) fixed binary(9);
+/* The code.  See make_code_ for details. */
 declare codes(0:511) bit(20) varying;
 
 declare i fixed binary(10);

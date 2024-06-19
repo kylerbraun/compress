@@ -1,12 +1,36 @@
 /* -*- indent-tabs-mode: nil -*- */
 make_code_: procedure(bytes, order, codes);
 
+/* This program compresses segments by generating a code and then translating
+   the segment into that code.  A code is a mapping of bytes in the input
+   segment to bit strings.  Confusingly, I also call each such bitstring a code.
+   These codes are assigned so that no code is a prefix of any other code.  This
+   allows the codes to be packed together in the output segment without any
+   padding.  The output segment consists of a header, describing the code,
+   followed by the translation of the input segment into the code.  Since this
+   program works in whole bytes, if the input segment does not consist of a
+   whole number of bytes, its bit count is be rounded up to the next multiple
+   of 9 for purposes of compression.  The number of extra bits included this way
+   is recorded in the header, so that the original bit count can be recovered.
+   See write_header_ for details of the header format.
+
+   This procedure generates a code based on the contents of bytes.  The code is
+   generated so that the length of each byte's code is close to the total number
+   of bytes divided by the number of instances of that byte.  The code is
+   generated so as to create no gaps, meaning that any bit string that is not a
+   valid sequence of packed codes can be made valid by appending extra bits to
+   it. */
+
 %include external;
 %include count_bytes_;
 declare length builtin;
 
 declare bytes(*) bit(9);
+/* (output) Unique bytes in decreasing order of frequency. */
 declare order(0:511) fixed binary(9);
+/* (output) Table of codes, indexed by the corresponding byte.  If a byte does
+   not occur in the input segment, its entry in this array will contain an empty
+   bit string instead. */
 declare codes(0:511) bit(20) varying;
 
 declare code_value fixed binary(21);
@@ -93,6 +117,8 @@ allocations_left: procedure(n) returns(fixed binary(10));
 end;
 
 num_codes: procedure(n) returns(fixed binary(20));
+   /* This procedure calculates the fraction of the code space that would be
+      consumed by the next code if it were extended by n bits. */
    declare code_value fixed binary(21);
    declare n fixed binary(5);
    code_value = convert(code_value, next_code);

@@ -1,10 +1,15 @@
 /* -*- indent-tabs-mode: nil -*- */
 encode_: procedure(bytes, destination, codes, used);
 
+/* This procedure maps the bytes in bytes to the corresponding codes, and packs
+   them into the region pointed to by destination.  used indicates the starting
+   offset in bits within the destination region.  used is updated to indicate
+   the end of the encoded data. */
+
 declare bytes(*) bit(9);
 declare destination pointer;
 declare codes(0:511) bit(20) varying;
-declare used fixed binary(24);
+declare used fixed binary(24); /* (input/output) */
 
 declare byte fixed binary(9);
 declare destination_bits bit(255*1024*36) based(destination);

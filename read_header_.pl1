@@ -2,9 +2,17 @@
 read_header_: procedure(bits, order, codes, padding_size)
   returns(fixed binary(24));
 
+/* This procedure extracts information from the header for the compressed data
+   in bits. */
+
 declare bits bit(*);
+/* (output) Bytes ordered by length of encoding in the code.  See make_code_ for
+   details. */
 declare order(0:511) fixed binary(9);
+/* (output) The code.  See make_code_ for details. */
 declare codes(0:511) bit(20) varying;
+/* (output) The padding included when compressing.  See make_code_ for details.
+   */
 declare padding_size fixed binary(4);
 
 declare code_count fixed binary(10);
@@ -16,6 +24,8 @@ declare i fixed binary(10);
 declare next_code bit(21) varying initial("0"b);
 declare seen(0:511) bit initial((512) ("0"b));
 declare used fixed binary(24) initial(0);
+
+/* See write_header_ for details of the header format. */
 
 codes = ""b;
 if length(bits) = 0 then do;
@@ -44,14 +54,24 @@ do i = 0 to code_count - 1;
    codes(order(i)) = next_code;
    code_value = convert(code_value, next_code);
    code_value = code_value + 1;
+   /* If the addition overflows the target bits, and there are still more codes
+      to go, then we have an impossible code. */
    if code_value >= 2**length(next_code) & i < code_count - 1
       then signal compress_bad_header;
+   /* Extract the last length(next_code) bits of the addition result. */
    next_code = substr(convert(next_code, code_value),
                       21 - length(next_code) + 1);
 end;
+/* If next_code did not overflow to zero, then we have a problem, since
+   make_code_ always fills the code space completely. */
 if next_code ^= copy("0"b, length(next_code))
    then signal compress_bad_header;
 
+/* Construct an ordering of the bytes roughly by frequency.  Since we don't know
+   the actual frequencies of the bytes at this point, we can't reconstruct the
+   original ordering; but this is unnecessary anyway.  All that is needed is for
+   the ordering to be consistent with the code lengths, so we use those as a
+   proxy. */
 do i = lbound(codes, 1) to hbound(codes, 1);
    if length(codes(i)) = 0 then do;
       order(code_count) = i;
@@ -64,6 +84,8 @@ padding_size = read_fixed(4);
 return(used);
 
 read: procedure(count) returns(bit(*));
+   /* This procedure reads the next count bits of the input region and returns
+      them as a bit string. */
    declare count fixed binary;
    used = used + count;
    if used > length(bits)
@@ -72,6 +94,8 @@ read: procedure(count) returns(bit(*));
 end;
 
 read_fixed: procedure(count) returns(fixed binary(35));
+   /* This procedure reads the next count bits of the input region and returns
+      them as a fixed binary integer. */
    declare count fixed binary;
    declare result fixed binary(35);
    result = convert(result, read(count));

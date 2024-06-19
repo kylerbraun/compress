@@ -4,10 +4,10 @@ make_example_code_: procedure(order, codes);
 /* This procedure generates a dummy code to allow certain procedures to be
    tested in isolation. */
 
-/* The code.  See make_code_ for details. */
+/* (output) The code.  See make_code_ for details. */
 declare codes(0:511) bit(20) varying;
-/* Bytes ordered by length of encoding in the code.  See make_code_ for details.
-   */
+/* (output) Bytes ordered by length of encoding in the code.  See make_code_ for
+   details. */
 declare order(0:511) fixed binary(9);
 
 declare i fixed binary(10);

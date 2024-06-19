@@ -3,22 +3,60 @@ decode_: procedure(source_arg, source_bitcount, destination_arg, order, codes,
                    used)
            returns(fixed binary(20));
 
+/* This procedure maps the packed codes at offset used in the area pointed to by
+   source_arg back into the original input bytes, and stores the result in the
+   region pointed to by destination_arg.  The result is the number of bytes
+   written.  If an incomplete code is encountered, used is set to the offset in
+   bits from source_arg where the incomplete code begins, and compress_bad_code
+   is signalled. */
+
 declare source_arg pointer;
+/* Size in bits of region pointed to by source_arg. */
 declare source_bitcount fixed binary(24);
 declare destination_arg pointer;
+/* Bytes ordered by length of encoding in the code.  See make_code_ and
+   read_header_ for details. */
 declare order(0:511) fixed binary(9);
+/* The code.  See make_code_ for details. */
 declare codes(0:511) bit(20) varying;
-declare used fixed binary(24);
+declare used fixed binary(24); /* (input/output) */
 
+/* This structure describes how a code prefix should be handled.  The structures
+   of this type are organized as a binary tree.  The left child points to the
+   node representing the prefix obtained by appending a 0 bit, and the right
+   child to the analogous node for a 1 bit. */
 declare 01 node based aligned,
+           /* Indicates whether this prefix is a complete code.  A node for a
+              complete code has no children. */
            02 has_value bit,
+           /* The byte that this code represents.  This is only valid when
+              has_value = "1"b. */
            02 value character,
+           /* Pointers to children of this node, indexed by the bit to be
+              appended to the prefix.  If a child node does not exist, its
+              pointer will be null.  If a child pointer is null and
+              has_value = "0"b, then we are still constructing the tree and the
+              child node has yet to be created. */
            02 children(0:1) pointer;
 
+/* This variable contains a table of cached decoding results for bytes following
+   a given prefix.  It is indexed by the byte to be decoded. */
 declare 01 table(0:511) based aligned,
+           /* The complete bytes decoded from this byte. */
            02 bytes character(9) varying,
+           /* A pointer to the cached decoding table for the incomplete prefix
+              at the end of this byte.  This chains the tables together so that
+              sequences of bytes with cached decodings can be decoded in
+              sequence. */
            02 next_pointer pointer,
+           /* A pointer to the tree node for the incomplete prefix at the end of
+              this byte.  If it is null, then this table entry is unused.  This
+              eliminates the need to re-decode the incomplete prefix. */
            02 subtree pointer initial((512) null),
+           /* The length of the incomplete prefix at the end of this byte.  This
+              will be greater than 9 if the incomplete prefix begins before this
+              byte.  This is needed so that the beginning of the incomplete code
+              can be calculated when compress_bad_code needs to be signalled. */
            02 prefix_length fixed binary(5);
 
 declare 01 entry like table based aligned;
@@ -35,17 +73,25 @@ declare i fixed binary(10);
 declare input character(divide(source_bitcount + 8, 9, 20)) based(source);
 declare j fixed binary(24);
 declare left fixed binary(4);
-declare max_prefix_length fixed binary(5) static initial(5) options(constant);
+/* This constant has been found to be optimal through experimentation. */
+declare max_cacheable_prefix fixed binary(5) static initial(5)
+     options(constant);
 declare null builtin;
+/* num_ptables = 2**(max_cacheable_prefix + 1) - 1 */
 declare num_ptables fixed binary(21) static initial(63) options(constant);
 declare old_written fixed binary(20);
 declare output character(255*1024*4) based(destination);
-declare partial_index fixed binary(24);
+declare first_partial_byte fixed binary(24);
 declare pentry pointer;
 declare pnode pointer based(ppnode);
 declare pnode_ro pointer;
 declare ppnode pointer;
 declare prefix_length fixed binary(5) initial(0);
+/* Pointers to cached decoding result tables for each prefix.  Indices are
+   constructed by prepending a 1 bit to the prefix, and converting the result
+   to an index.  This eliminates any possible ambiguity resulting from the
+   conversion to an index.  A null pointer indicates that no cache entries for
+   the index in question have been created. */
 declare ptable(num_ptables) pointer initial((num_ptables) null);
 declare quit condition;
 declare source pointer initial(source_arg);
@@ -54,6 +100,8 @@ declare table_index fixed binary(9);
 declare tree pointer initial(null);
 declare written fixed binary(20) initial(0);
 
+/* The code further down can't handle the case where nothing needs to be done,
+   so we check for it here. */
 if source_bitcount = used
    then return(written);
 
@@ -79,49 +127,55 @@ do i = lbound(order, 1) to hbound(order, 1)
       then signal error;
    allocate node set(pnode);
    pnode->has_value = "1"b;
+   /* Convert i into the corresponding character.  This is a slightly
+      inefficient way to to this; it would be better to use unspec. */
    pnode->value = substr(collate9(), order(i) + 1, 1);
 end;
 
 pnode_ro = tree;
-j = divide(used, 9, 24) + 1;
-partial_index = length(input);
+j = divide(used, 9, 24) + 1; /* j = index of first completely unused byte */
+first_partial_byte = length(input);
 if mod(source_bitcount, 9) = 0
-   then partial_index = partial_index + 1;
+   then first_partial_byte = first_partial_byte + 1;
+/* Convert the character at j into a table index.  This is a needlessly
+   inefficient way to do this; it would be much better to use unspec. */
 table_index = index(collate9(), substr(input, j, 1)) - 1;
 byte = convert(byte, table_index);
 call decode_bit_string(substr(byte, mod(used, 9) + 1));
 code_pointer = get_next_pointer(byte);
-do j = j + 1 to partial_index - 1;
-  table_index = index(collate9(), substr(input, j, 1)) - 1;
-  byte = convert(byte, table_index);
-  if code_pointer ^= null then do;
-     pentry = addr(code_pointer->table(table_index));
-     if pentry->entry.subtree ^= null then do;
-        copy_length = length(pentry->entry.bytes);
-        substr(output, written + 1, copy_length) = pentry->entry.bytes;
-        written = written + copy_length;
-        prefix_length = pentry->entry.prefix_length;
-        pnode_ro = pentry->entry.subtree;
-        code_pointer = pentry->entry.next_pointer;
-     end;
-     else do;
-        old_written = written;
-        call decode_bit_string(byte);
-        code_pointer = get_next_pointer(byte);
-        copy_length = written - old_written;
-        pentry->entry.bytes = substr(output, old_written + 1, copy_length);
-        pentry->entry.prefix_length = prefix_length;
-        pentry->entry.next_pointer = code_pointer;
-        pentry->entry.subtree = pnode_ro;
-     end;
-  end;
-  else do;
-     call decode_bit_string(byte);
-     code_pointer = get_next_pointer(byte);
-  end;
+do j = j + 1 to first_partial_byte - 1;
+   /* See previous use of collate9. */
+   table_index = index(collate9(), substr(input, j, 1)) - 1;
+   byte = convert(byte, table_index);
+   if code_pointer ^= null then do;
+      pentry = addr(code_pointer->table(table_index));
+      if pentry->entry.subtree ^= null then do;
+         copy_length = length(pentry->entry.bytes);
+         substr(output, written + 1, copy_length) = pentry->entry.bytes;
+         written = written + copy_length;
+         prefix_length = pentry->entry.prefix_length;
+         pnode_ro = pentry->entry.subtree;
+         code_pointer = pentry->entry.next_pointer;
+      end;
+      else do;
+         old_written = written;
+         call decode_bit_string(byte);
+         code_pointer = get_next_pointer(byte);
+         copy_length = written - old_written;
+         pentry->entry.bytes = substr(output, old_written + 1, copy_length);
+         pentry->entry.prefix_length = prefix_length;
+         pentry->entry.next_pointer = code_pointer;
+         pentry->entry.subtree = pnode_ro;
+      end;
+   end;
+   else do;
+      call decode_bit_string(byte);
+      code_pointer = get_next_pointer(byte);
+   end;
 end;
 if mod(source_bitcount, 9) ^= 0 then do;
-   table_index = index(collate9(), substr(input, partial_index, 1));
+   /* See previous uses of collate9. */
+   table_index = index(collate9(), substr(input, first_partial_byte, 1));
    byte = convert(byte, table_index);
    call decode_bit_string(substr(byte, 1, mod(source_bitcount, 9)));
 end;
@@ -136,10 +190,15 @@ call free_tables;
 return(written);
 
 get_next_pointer: procedure(byte) returns(pointer);
+   /* This procedure is meant to be called after decode_bit_string.  It checks
+      whether the incomplete prefix at the end of byte has a cached decoding
+      result table.  If so, a pointer to the table is returned.  Otherwise, null
+      is returned. */
    declare byte bit(9);
    declare next_index fixed binary(6);
-   if left > max_prefix_length
+   if left > max_cacheable_prefix
       then return(null);
+   /* See comment on declaration of ptable above. */
    next_index =
      convert(next_index, "1"b || substr(byte, 10 - left, left));
    if ptable(next_index) = null
@@ -148,6 +207,10 @@ get_next_pointer: procedure(byte) returns(pointer);
 end;
 
 decode_bit_string: procedure(bits);
+   /* This procedure decodes the bits in bits.  Any bytes decoded are written to
+      output, and written is adjusted accordingly.  Finally, pnode_ro, left, and
+      prefix_length are adjusted appropriately for the incomplete prefix at the
+      end of bits. */
    declare bits bit(*);
    declare child_index fixed binary(1);
    declare i fixed binary(24);

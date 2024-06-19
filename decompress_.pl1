@@ -2,12 +2,18 @@
 decompress_: procedure(source, source_bitcount, destination, used)
                returns(fixed binary(24));
 
+/* This procedure uncompresses data pointed to by source and writes the result
+   to the region pointed to by destination.  If an error occurs, used is updated
+   to indicate the bit offset of the code that caused the error.  See make_code_
+   for details of the format of compressed data. */
+
 %include decode_;
 %include read_header_;
 
 declare source pointer;
 declare source_bitcount fixed binary(24);
 declare destination pointer;
+/* (output) Number of bits written if condition is signalled. */
 declare used fixed binary(24);
 
 declare bits bit(source_bitcount) based(source);

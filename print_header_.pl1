@@ -1,11 +1,15 @@
 /* -*- indent-tabs-mode: nil -*- */
 print_header_: procedure(source, full);
 
+/* This procedure prints information about the header for the compressed data
+   in source.  It prints the padding size, the header length, and the code. */
+
 %include external;
 %include print_code_;
 %include read_header_;
 
 declare source bit(*);
+/* Indicates how many entries to print.  See print_code_ for details. */
 declare full bit;
 
 declare codes(0:511) bit(20) varying;

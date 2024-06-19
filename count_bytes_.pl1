@@ -1,6 +1,9 @@
 /* -*- indent-tabs-mode: nil -*- */
 count_bytes_: procedure(bytes) returns (dimension(0:511) fixed binary(35));
 
+/* This procedure counts the number of occurrences of each byte in the given
+   array.  The return value is an array of counts indexed by byte. */
+
 declare bytes(*) bit(9);
 
 declare byte_value fixed binary(9);

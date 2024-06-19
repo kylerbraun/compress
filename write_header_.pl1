@@ -2,22 +2,30 @@
 write_header_: procedure(destination, order, codes, padding_size)
     returns(fixed binary(24));
 
+/* This procedure encodes the provided information as a header, and stores it in
+   the region pointed to by destination.  Returns the number of bits written.
+   The header format is described in the comments below. */
+
 declare destination pointer;
+/* Bytes ordered by frequency of occurrence in the input region.  See
+   make_code_ for details. */
 declare order(0:511) fixed binary(9);
+/* The code.  See make_code_ for details. */
 declare codes(0:511) bit(20) varying;
+/* The number of bits beyond the bit count contained in the last byte.  See
+   make_code_ for details. */
 declare padding_size fixed binary(4);
 
 declare bits bit(255*1024*36) based(destination);
 declare i fixed binary(10);
 declare used fixed binary(24) initial(0);
 
+/* The header begins with a list of bytes that occur in the input region in
+   decreasing order of frequency.  Create this list. */
 do i = lbound(order, 1) to hbound(order, 1) while(length(codes(order(i))) > 0);
    call append_fixed((order(i)), 9);
 end;
 
-/* Terminate list with repeated first element, or 0-1-1 if there are no
-   elements.  These terminators are recognizable because they contain repeated
-   elements, which cannot occur in the payload itself. */
 /* If the input is empty, don't generate a header. */
 if i = 0
    then return(used);
@@ -27,21 +35,32 @@ if i = 0
 else if i <= hbound(order, 1)
    then call append_fixed((order(0)), 9);
 
+/* Following the byte list is a list of code lengths.  Only the code lengths are
+   stored because only the code lengths are needed---read_header_ can then
+   construct a code from that the same way make_code_ does.  The code lengths
+   are written in the same order as their corresponding bytes in the preceding
+   list, so that the correspondence can be determined.  Codes are written as
+   packed 5-bit fields. */
 do i = lbound(order, 1) to hbound(order, 1) while(length(codes(order(i))) > 0);
    call append_fixed(length(codes(order(i))), 5);
 end;
 
+/* At the end of the header is a packed 4-bit field containing the padding size.
+   */
 call append_fixed((padding_size), 4);
 
 return(used);
 
 append: procedure(datum);
+   /* This procedure appends the given bit string to the output region. */
    declare datum bit(*) varying;
    substr(bits, used + 1, length(datum)) = datum;
    used = used + length(datum);
 end;
 
 append_fixed: procedure(datum, length);
+   /* This procedure appends datum to the output region as a packed field of
+      length bits. */
    declare datum fixed binary(35);
    declare length fixed binary;
    declare to_append bit(35);

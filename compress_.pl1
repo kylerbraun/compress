@@ -2,19 +2,25 @@
 compress_: procedure(source, destination, bit_count)
              returns(fixed binary(24));
 
+/* This procedure compresses data pointed to by source and writes the result to
+   the region pointed to by destination.  See make_code_ for details of the
+   format of compressed data. */
+
 %include encode_;
 %include make_code_;
 %include write_header_;
 
-declare source pointer;
+declare source pointer; /* Pointer to the data to compress. */
+/* Pointer to the desired location of the compressed output. */
 declare destination pointer;
-declare bit_count fixed binary(24);
+declare bit_count fixed binary(24); /* Number of bits to compress. */
 
 declare codes(0:511) bit(20) varying;
 declare order(0:511) fixed binary(9);
+/* Calculate number of bytes containing bits to be compressed. */
 declare source_bytes dimension(divide(bit_count + 8, 9, 20)) bit(9)
      based(source);
-declare used fixed binary(24);
+declare used fixed binary(24); /* (output) Number of bits written. */
 
 call make_code_(source_bytes, order, codes);
 used = write_header_(destination, order, codes, mod(-bit_count, 9));

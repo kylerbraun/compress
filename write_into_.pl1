@@ -1,12 +1,15 @@
 /* -*- indent-tabs-mode: nil -*- */
 write_into_: procedure(segment, write, caller, entryname);
 
+/* This procedure truncates the segment pointed to by segment, calls write, and
+   sets the segment's bit count to the value returned from write. */
+
 %include external;
 
 declare segment pointer;
 declare write entry returns(fixed binary(24)) variable;
-declare caller char(*);
-declare entryname char(*);
+declare caller character(*); /* Program name to be used in error messages. */
+declare entryname character(*); /* Entryname of the provided segment. */
 
 declare bit_count fixed binary(24);
 declare compress_fatal condition;
