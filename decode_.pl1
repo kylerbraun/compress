@@ -127,9 +127,8 @@ do i = lbound(order, 1) to hbound(order, 1)
       then signal error;
    allocate node set(pnode);
    pnode->has_value = "1"b;
-   /* Convert i into the corresponding character.  This is a slightly
-      inefficient way to to this; it would be better to use unspec. */
-   pnode->value = substr(collate9(), order(i) + 1, 1);
+   unspec(pnode->value)
+     = substr(unspec(order(i)), length(unspec(order(i))) - 8, 9);
 end;
 
 pnode_ro = tree;
@@ -137,16 +136,13 @@ j = divide(used, 9, 24) + 1; /* j = index of first completely unused byte */
 first_partial_byte = length(input);
 if mod(source_bitcount, 9) = 0
    then first_partial_byte = first_partial_byte + 1;
-/* Convert the character at j into a table index.  This is a needlessly
-   inefficient way to do this; it would be much better to use unspec. */
-table_index = index(collate9(), substr(input, j, 1)) - 1;
-byte = convert(byte, table_index);
+byte = unspec(substr(input, j, 1));
+table_index = convert(table_index, byte);
 call decode_bit_string(substr(byte, mod(used, 9) + 1));
 code_pointer = get_next_pointer(byte);
 do j = j + 1 to first_partial_byte - 1;
-   /* See previous use of collate9. */
-   table_index = index(collate9(), substr(input, j, 1)) - 1;
-   byte = convert(byte, table_index);
+   byte = unspec(substr(input, j, 1));
+   table_index = convert(table_index, byte);
    if code_pointer ^= null then do;
       pentry = addr(code_pointer->table(table_index));
       if pentry->entry.subtree ^= null then do;
@@ -174,9 +170,8 @@ do j = j + 1 to first_partial_byte - 1;
    end;
 end;
 if mod(source_bitcount, 9) ^= 0 then do;
-   /* See previous uses of collate9. */
-   table_index = index(collate9(), substr(input, first_partial_byte, 1));
-   byte = convert(byte, table_index);
+   byte = unspec(substr(input, first_partial_byte, 1));
+   table_index = convert(table_index, byte);
    call decode_bit_string(substr(byte, 1, mod(source_bitcount, 9)));
 end;
 if prefix_length ^= 0 then do;
